@@ -110,13 +110,7 @@ void ClientServiceHandler::get_position(vector<PositionTypeTrans> & _return, con
 	auto pos_vec = tm->getAllPosition(client_id);
 	for (auto pos : pos_vec) {
 		PositionTypeTrans ptt;
-		ptt.available_amount = pos.available_amount;
-		ptt.average_price = pos.average_price;
-		ptt.client_id = pos.client_id;
-		ptt.total_amount = pos.total_amount;
-		ptt.frozen_amount = pos.frozen_amount;
-		ptt.instr_code = pos.instr_code.toStdString();
-		ptt.long_short = pos.long_short;
+        ptt << pos;
 		_return.push_back(ptt);
 	}
 }

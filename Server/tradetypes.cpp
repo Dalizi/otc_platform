@@ -33,15 +33,20 @@ PositionType &operator<<(PositionType &pt, const PositionTypeTrans &ptt) {
 	pt.instr_code = QString::fromStdString(ptt.instr_code);
 	pt.long_short = ptt.long_short;
 	pt.total_amount = ptt.total_amount;
+    pt.underlying_price = ptt.underlying_price;
+    pt.occupied_margin = ptt.occupied_margin;
 	return pt;
 }
 PositionTypeTrans &operator<<(PositionTypeTrans &ptt, const PositionType &pt) {
-	ptt.available_amount = pt.available_amount;
-	ptt.average_price = pt.average_price;
-	ptt.client_id = pt.client_id;
-	ptt.frozen_amount = pt.frozen_amount;
-	ptt.instr_code = pt.instr_code.toStdString();
-	ptt.long_short = pt.long_short;
-	ptt.total_amount = pt.total_amount;
+    ptt.available_amount = pt.available_amount;
+    ptt.average_price = pt.average_price;
+    ptt.client_id = pt.client_id;
+    ptt.total_amount = pt.total_amount;
+    ptt.frozen_amount = pt.frozen_amount;
+    ptt.instr_code = pt.instr_code.toStdString();
+    ptt.long_short = pt.long_short;
+    ptt.underlying_price = pt.underlying_price;
+    ptt.occupied_margin = pt.occupied_margin;
 	return ptt;
 }
+

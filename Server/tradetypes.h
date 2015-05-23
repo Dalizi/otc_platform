@@ -50,7 +50,7 @@ struct PositionType {
     int available_amount = 0; //可用数量
     int frozen_amount = 0; //冻结数量
     double occupied_margin = 0;
-    double underlying_price;
+    double underlying_price = 0;
     LongShortType long_short = LONG; //买卖方向
 };
 
