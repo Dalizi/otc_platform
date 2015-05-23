@@ -49,6 +49,7 @@ struct PositionType {
     int total_amount = 0;	//总量
     int available_amount = 0; //可用数量
     int frozen_amount = 0; //冻结数量
+    double occupied_margin = 0;
     double underlying_price;
     LongShortType long_short = LONG; //买卖方向
 };

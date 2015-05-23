@@ -91,7 +91,7 @@ void TradeManager::addPosition(const PositionType &pt) {
     QSqlQuery query(db);
     query.prepare("INSERT INTO position (id, long_short, instr_code, "
                   "total_amount, available_amount, frozen_amount,"
-                  " average_price, underlying_price)"
+                  " average_price, underlying_price, occupied_margin)"
                   "VALUES (?, ?, ?, ?, ?, ?, ?,?)");
     query.addBindValue(pt.client_id);
     query.addBindValue((int)pt.long_short);
@@ -101,6 +101,7 @@ void TradeManager::addPosition(const PositionType &pt) {
     query.addBindValue(pt.frozen_amount);
     query.addBindValue(pt.average_price);
     query.addBindValue(pt.underlying_price);
+    query.addBindValue(pt.occupied_margin);
     if (!query.exec()) {
         qDebug() <<"INSERTION FAILED..." <<" " <<query.lastQuery() <<" " <<query.lastError();
     }
@@ -296,6 +297,7 @@ PositionType TradeManager::getPosition(int client_id, const QString &instr_code,
         pt.frozen_amount = query.value(5).toInt();
         pt.long_short = (LongShortType)query.value(6).toInt();
         pt.underlying_price = query.value(7).toDouble();
+        pt.occupied_margin = query.value(8).toDouble();
     }
     return pt;
 }
@@ -424,6 +426,8 @@ void TradeManager::setTransaction(const TransactionType &ot) {
 void TradeManager::setPosition(const TransactionType &ot) {
     PositionType pt = getPosition(ot.client_id, ot.instr_code, ot.getPositionDirect());
 	if (pt.instr_code == "") {
+        string underlying_code = calc_server->getUnderlyingCode(ot.instr_code.toStdString());
+        int multiplier = calc_server->main_contract.multiplier;
 		pt.instr_code = ot.instr_code;
 		pt.client_id = ot.client_id;
 		pt.long_short = ot.long_short;
@@ -432,9 +436,13 @@ void TradeManager::setPosition(const TransactionType &ot) {
         pt.available_amount = ot.amount;
         pt.average_price = ot.price;
         pt.underlying_price = calc_server->Settle_Price(pt.instr_code.toStdString(), pt.long_short);
+        if (ot.long_short == LONG)
+            pt.occupied_margin = calc_server->Settle_Price(underlying_code, ot.long_short)
+                                * ot.amount*multiplier
+                                * getMarginRate(ot.client_id, ot.instr_code.toStdString());
 		addPosition(pt);
     } else {
-    updatePosition(pt, ot);
+        updatePosition(pt, ot);
     }
 //    updateMainPosition(pt1, ot);
 //    setMainPosition(pt1);
@@ -676,7 +684,8 @@ bool TradeManager::openDB()
                     "total_amount integer,"
                     "available_amount integer,"
                     "frozen_amount integer,"
-                    "long_short integer"
+                    "long_short integer,"
+                    "occupied_margin double"
                     ");");
     if (!query.exec())
         qDebug() << "CREATE position table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
@@ -775,16 +784,22 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
     QSqlQuery query(db);
     int adjust_param = ot.open_offset == OpenOffsetType::OPEN ? 1 : -1;
     int total_amount = pt.total_amount + ot.amount * adjust_param;
+    string underlying_code = calc_server->getUnderlyingCode(ot.instr_code.toStdString());
+    int multiplier = calc_server->main_contract.multiplier;
+    double occupied_margin = calc_server->Settle_Price(underlying_code, ot.long_short)
+                        * ot.amount*multiplier
+                        * getMarginRate(ot.client_id, ot.instr_code.toStdString());
     double average_price, underlying_price;
     if (total_amount != 0) {
         average_price = (pt.average_price * pt.total_amount + ot.price * ot.amount * adjust_param) / (pt.total_amount + ot.amount * adjust_param);
         underlying_price = (pt.underlying_price * pt.total_amount + ot.underlying_price * ot.amount * adjust_param) / (pt.total_amount + ot.amount * adjust_param) ;
-        query.prepare("UPDATE position SET total_amount=?, available_amount=?,average_price=?, underlying_price=? "
+        query.prepare("UPDATE position SET total_amount=?, available_amount=?,average_price=?, underlying_price=?, occupied_margin=?"
                       "WHERE instr_code=? AND id=? AND long_short=?");
         query.addBindValue(total_amount);
         query.addBindValue(total_amount);
         query.addBindValue(average_price);
         query.addBindValue(underlying_price);
+        query.addBindValue(pt.long_short==LONG?0:((ot.open_offset==OPEN?1:-1)*occupied_margin));
         query.addBindValue(pt.instr_code);
         query.addBindValue(pt.client_id);
         query.addBindValue(static_cast<int>(pt.long_short));

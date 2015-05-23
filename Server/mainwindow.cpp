@@ -30,9 +30,7 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
     connect(opd, SIGNAL(orderPlaced()), this, SLOT(onOrderPlaced()));
 	connect(ui->refreshPushButton, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
     connect(ui->refreshPushButton_1, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
-    connect(tm.get(), SIGNAL(errOccured(QString)), this, SLOT(onErrOccured(QString)));
     connect(&lcz_timer, SIGNAL(timeout()), this, SLOT(redisWriteClientGreeks()));
-    connect(tm->calc_server, SIGNAL(errOccured(QString)), this, SLOT(onErrOccured(QString)));
     redisWriteClientGreeks();
     ui->mainAccountPositionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->reportedOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -148,6 +146,7 @@ void MainWindow::setPositionLine(QTableWidget *qtw, PositionType pbt, int row, b
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.average_price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tm->getPnL(pbt, is_main))));
     qtw->setItem(row, column++, new QTableWidgetItem((int)pbt.long_short==0?"Buy":"Sell"));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.occupied_margin)));
 	if (is_main) {
 		auto greeks = tm->getGreeks(pbt);
 		qtw->setItem(row, column++, new QTableWidgetItem(QString::number(greeks.delta)));

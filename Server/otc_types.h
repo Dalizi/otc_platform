@@ -151,7 +151,7 @@ class ClientInfoTrans {
 void swap(ClientInfoTrans &a, ClientInfoTrans &b);
 
 typedef struct _PositionTypeTrans__isset {
-  _PositionTypeTrans__isset() : client_id(false), instr_code(false), average_price(false), total_amount(false), available_amount(false), frozen_amount(false), long_short(false), offset_price(false) {}
+  _PositionTypeTrans__isset() : client_id(false), instr_code(false), average_price(false), total_amount(false), available_amount(false), frozen_amount(false), long_short(false), offset_price(false), occupied_margin(false) {}
   bool client_id :1;
   bool instr_code :1;
   bool average_price :1;
@@ -160,17 +160,18 @@ typedef struct _PositionTypeTrans__isset {
   bool frozen_amount :1;
   bool long_short :1;
   bool offset_price :1;
+  bool occupied_margin :1;
 } _PositionTypeTrans__isset;
 
 class PositionTypeTrans {
  public:
 
-  static const char* ascii_fingerprint; // = "7D2F1354CF92A9B824710F68652982FC";
-  static const uint8_t binary_fingerprint[16]; // = {0x7D,0x2F,0x13,0x54,0xCF,0x92,0xA9,0xB8,0x24,0x71,0x0F,0x68,0x65,0x29,0x82,0xFC};
+  static const char* ascii_fingerprint; // = "174B5F306BDBAA272D4FA3407C91EDF9";
+  static const uint8_t binary_fingerprint[16]; // = {0x17,0x4B,0x5F,0x30,0x6B,0xDB,0xAA,0x27,0x2D,0x4F,0xA3,0x40,0x7C,0x91,0xED,0xF9};
 
   PositionTypeTrans(const PositionTypeTrans&);
   PositionTypeTrans& operator=(const PositionTypeTrans&);
-  PositionTypeTrans() : client_id(0), instr_code(), average_price(0), total_amount(0), available_amount(0), frozen_amount(0), long_short((LongShortType)0), offset_price(0) {
+  PositionTypeTrans() : client_id(0), instr_code(), average_price(0), total_amount(0), available_amount(0), frozen_amount(0), long_short((LongShortType)0), offset_price(0), occupied_margin(0) {
   }
 
   virtual ~PositionTypeTrans() throw();
@@ -182,6 +183,7 @@ class PositionTypeTrans {
   int32_t frozen_amount;
   LongShortType long_short;
   double offset_price;
+  double occupied_margin;
 
   _PositionTypeTrans__isset __isset;
 
@@ -201,6 +203,8 @@ class PositionTypeTrans {
 
   void __set_offset_price(const double val);
 
+  void __set_occupied_margin(const double val);
+
   bool operator == (const PositionTypeTrans & rhs) const
   {
     if (!(client_id == rhs.client_id))
@@ -218,6 +222,8 @@ class PositionTypeTrans {
     if (!(long_short == rhs.long_short))
       return false;
     if (!(offset_price == rhs.offset_price))
+      return false;
+    if (!(occupied_margin == rhs.occupied_margin))
       return false;
     return true;
   }

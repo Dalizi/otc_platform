@@ -263,6 +263,11 @@
              </column>
              <column>
               <property name="text">
+               <string>占用保证金</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string>Delta</string>
               </property>
              </column>
@@ -865,6 +870,11 @@
              <column>
               <property name="text">
                <string>持仓方向</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>占用保证金</string>
               </property>
              </column>
             </widget>
