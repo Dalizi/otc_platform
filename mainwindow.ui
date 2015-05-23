@@ -114,8 +114,8 @@
            <string/>
           </property>
           <property name="icon">
-           <iconset>
-            <normaloff>refresh.png</normaloff>refresh.png</iconset>
+           <iconset resource="otc_platform.qrc">
+            <normaloff>:/refresh.png</normaloff>:/refresh.png</iconset>
           </property>
          </widget>
         </item>
@@ -654,8 +654,8 @@
                   <string/>
                  </property>
                  <property name="icon">
-                  <iconset>
-                   <normaloff>refresh.png</normaloff>refresh.png</iconset>
+                  <iconset resource="otc_platform.qrc">
+                   <normaloff>:/refresh.png</normaloff>:/refresh.png</iconset>
                  </property>
                 </widget>
                </item>
@@ -852,6 +852,8 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="otc_platform.qrc"/>
+ </resources>
  <connections/>
 </ui>

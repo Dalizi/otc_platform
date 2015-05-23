@@ -2,7 +2,6 @@
 #include <fstream>
 #include <QMessageBox>
 
-
 using namespace std;
 
 Option_Value::Option_Value(string infile_location, TradeManager *tm) : tm(tm)
@@ -17,7 +16,8 @@ Option_Value::Option_Value(string infile_location, TradeManager *tm) : tm(tm)
     while (in_file >> temp)
     {
         Trade_Day.push_back(temp);
-	}
+    }
+
 
     string host("10.2.6.31");
     //int iRet = my_redis.Connect(host, 6379, "Finders6");

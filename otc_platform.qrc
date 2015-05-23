@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>ConfigFile.txt</file>
+        <file>refresh.png</file>
+        <file>TradeDate.txt</file>
+    </qresource>
+</RCC>

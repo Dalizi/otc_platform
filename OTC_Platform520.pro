@@ -16,7 +16,6 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     accessredis.cpp \
     addclientdialog.cpp \
-    base_function.cpp \
     ClientService.cpp \
     errmsgbase.cpp \
     orderplacedialog.cpp \
@@ -25,7 +24,8 @@ SOURCES += main.cpp\
     RPCServer.cpp \
     trademanager.cpp \
     tradetypes.cpp \
-    valuation_class.cpp
+    valuation_class.cpp \
+    base_function.cpp
 
 HEADERS  += mainwindow.h \
     accessredis.h \
@@ -51,4 +51,6 @@ LIBS += -lhiredis\
         -lthrift\
         -lthriftnb \
         -lthriftqt5 \
-        -levent
+
+RESOURCES += \
+    otc_platform.qrc
