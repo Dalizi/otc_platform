@@ -26,30 +26,22 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
     connect(this, SIGNAL(currentClientID(int)), opd, SLOT(onAddClient(int)));
     connect(acd, SIGNAL(clientAdded(QString)), this, SLOT(onClientAdded(QString)));
     connect(ui->khmcComboBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onCurrentIndexChanged(QString)));
+    connect(ui->selectClientComboBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(refreshTransactionPositionInfo()));
     connect(opd, SIGNAL(orderPlaced()), this, SLOT(onOrderPlaced()));
 	connect(ui->refreshPushButton, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
-	connect(ui->refreshPushButton_1, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
-    //connect(&timer, SIGNAL(timeout()), this, SLOT(onProcessOrderRequested()));
+    connect(ui->refreshPushButton_1, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
     connect(tm.get(), SIGNAL(errOccured(QString)), this, SLOT(onErrOccured(QString)));
     connect(&lcz_timer, SIGNAL(timeout()), this, SLOT(redisWriteClientGreeks()));
     connect(tm->calc_server, SIGNAL(errOccured(QString)), this, SLOT(onErrOccured(QString)));
     redisWriteClientGreeks();
-	ui->mainAccountPositionTableWidget->horizontalHeaderItem(0)->setSizeHint(QSize(40, 10));
-	ui->mainAccountPositionTableWidget->horizontalHeaderItem(0)->setSizeHint(QSize(200,10));
-	ui->mainAccountPositionTableWidget->horizontalHeaderItem(5)->setSizeHint(QSize(100, 10));
-	ui->mainAccountPositionTableWidget->horizontalHeaderItem(7)->setSizeHint(QSize(100, 10));
-	ui->mainAccountPositionTableWidget->horizontalHeaderItem(8)->setSizeHint(QSize(100, 10));
-	ui->mainAccountPositionTableWidget->horizontalHeaderItem(9)->setSizeHint(QSize(100, 10));
-	ui->mainAccountPositionTableWidget->horizontalHeaderItem(10)->setSizeHint(QSize(100, 10));
-	ui->mainAccountPositionTableWidget->resizeColumnsToContents();
-    ui->mainAccountPositionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->reportedOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->positionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->transactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->mainAccountPositionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->reportedOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->positionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->transactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     timer.start(3000);
     lcz_timer.start(1000 * 60);
     initClientInfo();
-	refreshTransactionPositionInfo();
+    refreshTransactionPositionInfo();
 	initMainAccountInfo();
 	
 
@@ -72,6 +64,7 @@ void MainWindow::initClientInfo() {
         cidStringList.append(qname);
     }
     ui->khmcComboBox->addItems(cidStringList);
+    ui->selectClientComboBox->addItems(cidStringList);
     displayClientInfo(ui->khmcComboBox->currentText());
 
 }
@@ -114,14 +107,14 @@ void MainWindow::onClientAdded(QString client_name) {
     ui->khmcComboBox->addItem(client_name);
 }
 
-void MainWindow::onCurrentIndexChanged(const QString cur_text) {
+void MainWindow::onCurrentIndexChanged(const QString &cur_text) {
     displayClientInfo(cur_text);
-	refreshTransactionPositionInfo();
+    //refreshTransactionPositionInfo();
 }
 
 void MainWindow::refreshTransactionPositionInfo() {
     int row =0;
-    auto current_client = ui->khmcComboBox->currentText();
+    auto current_client = ui->selectClientComboBox->currentText();
     auto position_info = tm->getAllPosition(current_client);
     ui->positionTableWidget->setRowCount(position_info.size());
     for (auto p:position_info) {
@@ -217,11 +210,6 @@ void MainWindow::onRefreshButtonClicked() {
     refreshRevenue(ui->mainAccountPositionTableWidget, true);
 }
 
-void MainWindow::onProcessOrderRequested() {
-	tm->processOrders();
-	refreshOrderInfo();
-
-}
 
 void MainWindow::onErrOccured(QString msg) {
 	QMessageBox msgBox;

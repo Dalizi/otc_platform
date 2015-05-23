@@ -101,8 +101,9 @@ void TradeManager::addPosition(const PositionType &pt) {
     query.addBindValue(pt.frozen_amount);
     query.addBindValue(pt.average_price);
     query.addBindValue(pt.underlying_price);
-    if (!query.exec())
+    if (!query.exec()) {
         qDebug() <<"INSERTION FAILED..." <<" " <<query.lastQuery() <<" " <<query.lastError();
+    }
 
 }
 
@@ -218,44 +219,6 @@ vector<OrderType> TradeManager::getAllOrders() {
 	return ret;
 }
 
-void TradeManager::acceptOrder(const string &order_id) {
-	auto status = getOrderStatus(order_id);
-	if (status != 0) {
-        stringstream ss;
-		ss << "Order: " <<order_id <<" not acceptable.";
-		errMsgBox(ss.str());
-	}
-	QSqlQuery query(db);
-	OrderType ot;
-	TransactionType tt;
-	query.prepare("SELECT * FROM orders WHERE id=?");
-	query.addBindValue(QString::fromStdString(order_id));
-	if (!query.exec())
-		qDebug() << "get order FAILED..." << " " << query.lastQuery() << " " << query.lastError();
-	if (query.next()) {
-		ot.order_id = query.value("id").toString();
-		ot.amount = query.value("amount").toInt();
-		ot.instr_code = query.value("instr_code").toString();
-		ot.client_id = query.value("client_id").toInt();
-        ot.long_short = (LongShortType)query.value("long_short").toInt();
-        ot.open_offset = (OpenOffsetType)query.value("open_offset").toInt();
-		ot.price = query.value("price").toDouble();
-	}
-	tt.transaction_id = ot.order_id;
-	tt.amount = ot.amount;
-	tt.instr_code = ot.instr_code;
-	tt.client_id = ot.client_id;
-	tt.long_short = ot.long_short;
-	tt.open_offset = ot.open_offset;
-	tt.price = ot.price;
-	tt.underlying_price = calc_server->getUnderlyingPrice(ot.instr_code.toStdString());
-	setTransaction(tt);
-	changeOrderStatus(order_id, 1);
-    updateBalance(ot);
-    setPosition(tt);
-
-}
-
 void TradeManager::acceptOrder(const OrderType &ot) {
     TransactionType tt;
     tt.transaction_id = ot.order_id;
@@ -273,16 +236,10 @@ void TradeManager::acceptOrder(const OrderType &ot) {
     //errMsgBox("Order accepted.");
 }
 
-void TradeManager::rejectOrder(const string &order_id) {
-	changeOrderStatus(order_id, 2);
-}
+
 
 void TradeManager::rejectOrder(const OrderType &ot) {
     changeOrderStatus(ot.order_id.toStdString(), 2);
-}
-
-void TradeManager::cancelOrder(const string &order_id) {
-	changeOrderStatus(order_id, 3);
 }
 
 void TradeManager::cancelOrder(const OrderType &ot) {
@@ -343,55 +300,7 @@ PositionType TradeManager::getPosition(int client_id, const QString &instr_code,
     return pt;
 }
 
-PositionType TradeManager::getMainPosition(const QString &instr_code, int long_short) {
-	QSqlQuery query(db);
-    query.prepare("SELECT * FROM position GROUP BY instr_code, long_short WHERE instr_code=? AND long_short=?");
-	query.addBindValue(instr_code);
-    query.addBindValue((int)long_short==0?1:0);
-	if (!query.exec())
-		qDebug() << "get main position FAILED..." << " " << query.lastQuery() << " " << query.lastError();
-	PositionType pt;
-	if (query.next()) {
-		pt.instr_code = query.value(0).toString();
-		pt.average_price = query.value(1).toDouble();
-		pt.total_amount = query.value(2).toInt();
-		pt.available_amount = query.value(3).toInt();
-		pt.frozen_amount = query.value(4).toInt();
-        pt.long_short = (LongShortType)query.value(5).toInt();
-	}
-	assert(!query.next());
-	return pt;
-}
 
-PositionType TradeManager::getPosition(const QString &client_name, const QString &instr_code, LongShortType long_short) {
-    QSqlQuery query(db);
-    query.prepare(QString("SELECT * FROM position WHERE name=? AND instr_code=? AND long_short=?"));
-    query.addBindValue(client_name);
-    query.addBindValue(instr_code);
-    query.addBindValue((int)long_short);
-    if (!query.exec())
-        qDebug() <<"get position FAILED..." <<" " <<query.lastQuery() <<" " <<query.lastError();
-    PositionType pt;
-    if (query.next()) {
-        pt.client_id = query.value(0).toInt();
-        pt.instr_code = query.value(1).toString();
-        pt.average_price = query.value(2).toDouble();
-        pt.total_amount = query.value(3).toInt();
-        pt.available_amount = query.value(4).toInt();
-        pt.frozen_amount = query.value(5).toInt();
-        pt.long_short = (LongShortType)query.value(6).toInt();
-    } else {
-        pt.client_id = getIDFromName(client_name);
-        pt.available_amount = 0;
-        pt.average_price = 0;
-        pt.frozen_amount = 0;
-        pt.total_amount = 0;
-        pt.instr_code = instr_code;
-        pt.long_short = long_short;
-    }
-    assert(!query.next());
-    return pt;
-}
 
 vector<PositionType> TradeManager::getAllPosition(int client_id) {
     vector<PositionType> ret;
@@ -952,19 +861,6 @@ void TradeManager::updateBalance(int client_id, double adjust_value) {
 		qDebug() << "Update balance FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 }
 
-void TradeManager::updateMainPosition(PositionType &pt, const TransactionType &ot) {
-	qDebug() << "Position Type instr_code:" << pt.instr_code << ";" << "Order Type instr_code:" << ot.instr_code;
-	assert(pt.instr_code == ot.instr_code);
-    assert(pt.long_short == ot.reversePosition());
-	pt.average_price = (pt.average_price * pt.total_amount + ot.price * ot.amount) / (pt.total_amount + ot.amount);
-	pt.total_amount += ot.amount;
-
-	/*可用数量和冻结数量暂不可用*/
-	pt.available_amount = pt.total_amount;
-	pt.frozen_amount = 0;
-
-    pt.long_short = ot.reversePosition();
-}
 
 int TradeManager::authPassword(int client_id, const string &passwd) {
 	QSqlQuery query(db);
@@ -990,20 +886,6 @@ int TradeManager::getOrderIndex() {
     }
 }
 
-
-void TradeManager::processOrders() {
-	QSqlQuery query(db);
-	query.prepare("SELECT id FROM orders WHERE order_status=0");
-	if (!query.exec()) 
-		qDebug() << "GET reported order id FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
-	while (query.next()) {
-		string order_id = query.value(0).toString().toStdString();
-		if (isOrderValid(order_id))
-			acceptOrder(order_id);
-		else
-			rejectOrder(order_id);
-	}
-}
 
 void TradeManager::processSingleOrder(const OrderType &ot) {
     if (isOrderValid(ot))

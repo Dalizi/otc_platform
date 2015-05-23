@@ -32,7 +32,6 @@ private:
     void initClientInfo();
     void initMainAccountInfo();
     void displayClientInfo(const QString &cur_text);
-    void refreshTransactionPositionInfo();
 	void refreshOrderInfo();
 	void setOrderLine(QTableWidget *qtw, OrderType pbt, int row);
     void setPositionLine(QTableWidget *qtw, PositionType pbt, int row, bool is_main);
@@ -57,14 +56,14 @@ public slots:
     //void onPlaceOrderButtonClicked();
     void onClientAdded(QString client_name);
     void onOrderPlaced();
-	void onRefreshButtonClicked();
-	void onProcessOrderRequested();
+    void onRefreshButtonClicked();
 	void onErrOccured(QString);
 
 private slots:
-    void onCurrentIndexChanged(const QString cur_text);
+    void onCurrentIndexChanged(const QString &cur_text);
+    void refreshTransactionPositionInfo();
     void onAddClientMenuTriggered();
-	void redisWriteClientGreeks();
+    void redisWriteClientGreeks();
 
 signals:
     void currentClientID(int client_id);

@@ -40,12 +40,12 @@ public:
 	vector<OrderType> getOrder(int client_id);
 	vector<OrderType> getAllOrders();
     PositionType getPosition(int client_id, const QString &instr_code, LongShortType long_short);
-    PositionType getPosition(const QString &client_name, const QString &instr_code, LongShortType long_short);
-	PositionType getMainPosition(const QString &instr_code, int long_short);
     vector<PositionType> getAllPosition(int client_id); //获取某客户的所有持仓
     vector<PositionType> getAllPosition(const QString &client_name);
     vector<PositionType> getAllMainAccountPosition();   //获取总账户的所有持仓
 	ClientBalance getBalance(int client_id);
+
+    //获取实时计算的客户权益
 	double getTotalBalance(int client_id);
     double getAvailableBalance(int client_id);
     double getFrozenBalance(int client_id);
@@ -55,8 +55,7 @@ public:
     ClientBalance getClientBalance(int client_id);
     int getIDFromName(const QString &client_name);
 
-	double getPnL(const PositionType &pt, bool isMain);
-    //double getGrossBalance(int client_id);
+    double getPnL(const PositionType &pt, bool isMain);
 	double getMargin(int client_id);
 	double getMarginRiskRatio(int client_id);
 	double getRTMargin(int client_id);
@@ -92,22 +91,11 @@ public:
     bool isPositionExist(int client_id, const QString &instr_code, int long_short);
 
     void updatePosition(const PositionType &pt, const TransactionType &ot);
-	void updateMainPosition(PositionType &pt, const TransactionType &ot);
 	void updateBalance(const OrderType &ot);
 	void updateBalance(int client_id, double adjust_value);
 
-	int authPassword(int client_id, const string &passwd);
-
-	void acceptOrder(const string &order_id);
-	void rejectOrder(const string &order_id);
-	void cancelOrder(const string &order_id);
-
-    void acceptOrder(const OrderType &ot);
-    void rejectOrder(const OrderType &ot);
-    void cancelOrder(const OrderType &ot);
-
-	void processOrders();
-    void processSingleOrder(const OrderType &ot);
+    int authPassword(int client_id, const string &passwd);
+    void processSingleOrder(const OrderType &ot);  //处理收到的委托
 
 	void initClientBalance(int client_id, double init_balance);
 
@@ -116,6 +104,11 @@ public:
 	void redisWriteClientGreeks(int client_id);
 
 private:
+    //处理委托
+    void acceptOrder(const OrderType &ot);
+    void rejectOrder(const OrderType &ot);
+    void cancelOrder(const OrderType &ot);
+
 	int getOrderStatus(const string &order_id);
     int getOrderIndex();
 	void changeOrderStatus(const string &order_id, int status);
@@ -137,8 +130,6 @@ private:
 	Option_Value *calc_server;
 	map<string, string> instr_code_type;
 
-signals:
-	void errOccured(QString);
 };
 
 #endif // TRADEMANAGER_H
