@@ -234,7 +234,6 @@ void TradeManager::acceptOrder(const OrderType &ot) {
     changeOrderStatus(ot.order_id.toStdString(), 1);
     updateBalance(ot);
     setPosition(tt);
-    //errMsgBox("Order accepted.");
 }
 
 
@@ -439,17 +438,15 @@ void TradeManager::setPosition(const TransactionType &ot) {
         pt.frozen_amount = 0;
         pt.available_amount = ot.amount;
         pt.average_price = ot.price;
-        pt.underlying_price = calc_server->Settle_Price(pt.instr_code.toStdString(), pt.long_short);
+        pt.underlying_price = calc_server->getUnderlyingPrice(ot.instr_code.toStdString());
         if (ot.long_short == SHORT)
             pt.occupied_margin = calc_server->Settle_Price(underlying_code, ot.long_short)
                                 * ot.amount*multiplier
-                                * getMarginRate(ot.client_id, ot.instr_code.toStdString());
+                                * getMarginRate(ot.client_id, ot.instr_code.toStdString()) + ot.amount*ot.price*multiplier;
 		addPosition(pt);
     } else {
         updatePosition(pt, ot);
     }
-//    updateMainPosition(pt1, ot);
-//    setMainPosition(pt1);
 }
 
 void TradeManager::setPosition(const PositionType &pt) {
@@ -799,7 +796,7 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
 
         double occupied_margin = calc_server->Settle_Price(underlying_code, ot.long_short)
                             * ot.amount*multiplier
-                            * getMarginRate(ot.client_id, ot.instr_code.toStdString());
+                            * getMarginRate(ot.client_id, ot.instr_code.toStdString()) + pt.average_price * ot.amount;
         double margin_chng = pt.occupied_margin + (pt.long_short==LONG?0:((ot.open_offset==OPEN?1:-1)*occupied_margin));
         query.prepare("UPDATE position SET total_amount=?, available_amount=?,average_price=?, underlying_price=?, occupied_margin=?"
                       "WHERE instr_code=? AND id=? AND long_short=?");
@@ -980,7 +977,7 @@ double TradeManager::getGrossBalance(int client_id) {
 */
 double TradeManager::getMarginRiskRatio(int client_id) {
 	auto cb = getBalance(client_id);
-	return cb.occupied_margin / (cb.occupied_margin + cb.available_balance);
+    return cb.occupied_margin / getMarketValueBalance(client_id);
 }
 
 double TradeManager::getMarketValueBalance(int client_id) {
@@ -1001,8 +998,8 @@ double TradeManager::getCloseCashFlow(const PositionType &pt) {
 
 inline
 double TradeManager::getCloseCashFlow(const OrderType &ot) {
-    auto close_price = calc_server->Position_Quote(ot.instr_code.toStdString(), ot.getPositionDirect());
-    return (ot.getPositionDirect()==LONG?1:-1) * close_price * ot.amount * calc_server->main_contract.multiplier;
+    //auto close_price = calc_server->Position_Quote(ot.instr_code.toStdString(), ot.getPositionDirect());
+    return (ot.getPositionDirect()==LONG?1:-1) * ot.price * ot.amount * calc_server->main_contract.multiplier;
 }
 
 inline
@@ -1142,4 +1139,26 @@ void TradeManager::redisWriteClientGreeks(int client_id) {
 	ss << greeks.vega;
 	m["Vega"] = ss.str();
     redis.HMSet("lcz", m);
+}
+
+void TradeManager::resetClientBalance(int client_id) {
+    QSqlQuery query(db);
+    query.prepare("UPDATE balance SET total_balance=100000, available_balance=100000, withdrawable_balance=100000, occupied_margin=0"
+                  " WHERE id=?");
+    query.addBindValue(client_id);
+    if (!query.exec()) {
+        QMessageBox::warning(0, "Warning", query.lastError().text());
+    }
+}
+
+
+inline
+double TradeManager::getTransactionPremium(const TransactionType &tt) {
+    /*多方支付权力金，空方收取权利金*/
+    return (tt.long_short == LONG ? -1:1) * tt.price * tt.amount * calc_server->getMultiplier(tt.instr_code.toStdString());
+}
+
+inline
+double TradeManager::getTransactionMargin(const TransactionType &tt) {
+    return 0;
 }

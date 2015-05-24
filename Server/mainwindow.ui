@@ -187,7 +187,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="otc_platform.qrc">
+             <iconset>
               <normaloff>:/refresh.png</normaloff>:/refresh.png</iconset>
             </property>
            </widget>
@@ -571,133 +571,119 @@
                </item>
               </layout>
              </item>
+             <item row="2" column="1">
+              <widget class="QPushButton" name="initClientBalancePushButton">
+               <property name="text">
+                <string>重置客户资金</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
           </layout>
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox_2">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="title">
-           <string>抵押品</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_8">
-           <item>
-            <widget class="QTableWidget" name="tableWidget_2">
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="groupBox_3">
-          <property name="title">
-           <string>风险监控</string>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <widget class="QTableWidget" name="tableWidget">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
-             </property>
-             <property name="sizeAdjustPolicy">
-              <enum>QAbstractScrollArea::AdjustIgnored</enum>
-             </property>
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-             <property name="sortingEnabled">
-              <bool>false</bool>
-             </property>
-             <attribute name="horizontalHeaderCascadingSectionResizes">
-              <bool>false</bool>
-             </attribute>
-             <attribute name="horizontalHeaderDefaultSectionSize">
-              <number>174</number>
-             </attribute>
-             <attribute name="verticalHeaderDefaultSectionSize">
-              <number>20</number>
-             </attribute>
-             <attribute name="verticalHeaderStretchLastSection">
-              <bool>false</bool>
-             </attribute>
-             <row>
-              <property name="text">
-               <string>总账户</string>
-              </property>
-             </row>
-             <row>
-              <property name="text">
-               <string>经纪账户</string>
-              </property>
-             </row>
-             <row>
-              <property name="text">
-               <string>内盘互换</string>
-              </property>
-             </row>
-             <row>
-              <property name="text">
-               <string>外盘互换</string>
-              </property>
-             </row>
-             <row>
-              <property name="text">
-               <string>场外交易</string>
-              </property>
-             </row>
-             <row>
-              <property name="text">
-               <string>融资交易</string>
-              </property>
-             </row>
-             <column>
-              <property name="text">
-               <string>账户权益</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>保证金</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>保证金试算</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>新建列</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>风险率</string>
-              </property>
-             </column>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+         <layout class="QFormLayout" name="formLayout_4">
+          <item row="1" column="0">
+           <widget class="QLabel" name="totalBalanceLabel">
+            <property name="text">
+             <string>总权益</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="totalBalanceLineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="availableBalanceLabel">
+            <property name="text">
+             <string>可用资金</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="availableBalanceLineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="marketValueBalanceLabel">
+            <property name="text">
+             <string>市值权益</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="marketValueBalanceLineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="withdrawableBalanceLabel">
+            <property name="text">
+             <string>可取资金</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="withdrawableBalanceLineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="occupiedMarginLabel">
+            <property name="text">
+             <string>保证金</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="occupiedMarginLineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="marginRatioLabel">
+            <property name="text">
+             <string>保证金风险率</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="marginRatioLineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="frozenBalanceLabel">
+            <property name="text">
+             <string>冻结资金</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="frozenBalanceLineEdit">
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -756,7 +742,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="otc_platform.qrc">
+             <iconset>
               <normaloff>:/refresh.png</normaloff>:/refresh.png</iconset>
             </property>
            </widget>
@@ -950,8 +936,6 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources>
-  <include location="otc_platform.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

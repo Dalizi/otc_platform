@@ -64,9 +64,12 @@ private slots:
     void refreshTransactionPositionInfo();
     void onAddClientMenuTriggered();
     void redisWriteClientGreeks();
+    void onResetBalanceButtonClicked();
+    void updateClientBalance();
 
 signals:
     void currentClientID(int client_id);
+    void resetBalance(int client_id);
 
 
 };

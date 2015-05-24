@@ -784,6 +784,12 @@ string Option_Value::getUnderlyingCode(const string &option_code) {
     return underlying_code;
 }
 
+inline
+int Option_Value::getMultiplier(const string &instr_code) {
+    /*当前只有一个合约，暂时返回固定乘数*/
+    return main_contract.multiplier;
+}
+
 double Option_Value::getUnderlyingPrice(const string &instr_code) {
     string underlying_code = getUnderlyingCode(instr_code);
 	string str_price;

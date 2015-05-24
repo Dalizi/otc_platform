@@ -31,6 +31,9 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
 	connect(ui->refreshPushButton, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
     connect(ui->refreshPushButton_1, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
     connect(&lcz_timer, SIGNAL(timeout()), this, SLOT(redisWriteClientGreeks()));
+    connect(ui->initClientBalancePushButton, SIGNAL(clicked()), this, SLOT(onResetBalanceButtonClicked()));
+    connect(this, SIGNAL(resetBalance(int)), tm.get(), SLOT(resetClientBalance(int)));
+    connect(&timer, SIGNAL(timeout()), this, SLOT(updateClientBalance()));
     redisWriteClientGreeks();
     ui->mainAccountPositionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->reportedOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -39,6 +42,7 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
     timer.start(3000);
     lcz_timer.start(1000 * 60);
     initClientInfo();
+    updateClientBalance();
     refreshTransactionPositionInfo();
 	initMainAccountInfo();
 	
@@ -219,4 +223,21 @@ void MainWindow::onErrOccured(QString msg) {
 void MainWindow::redisWriteClientGreeks() {
 	tm->redisWriteClientGreeks(2);
 	
+}
+
+void MainWindow::onResetBalanceButtonClicked() {
+    int client_id = ui->khbhLineEdit->text().toInt();
+    emit resetBalance(client_id);
+}
+
+void MainWindow::updateClientBalance() {
+    int client_id = ui->khbhLineEdit->text().toInt();
+    auto balance = tm->getBalance(client_id);
+    ui->marketValueBalanceLineEdit->setText(QString::number(tm->getMarketValueBalance(client_id)));
+    ui->totalBalanceLineEdit->setText(QString::number(balance.total_balance));
+    ui->occupiedMarginLineEdit->setText(QString::number(balance.occupied_margin));
+    ui->withdrawableBalanceLineEdit->setText(QString::number(balance.withdrawable_balance));
+    ui->availableBalanceLineEdit->setText(QString::number(tm->getAvailableBalance(client_id)));
+    ui->frozenBalanceLineEdit->setText(QString::number(tm->getFrozenBalance(client_id)));
+    ui->marginRatioLineEdit->setText(QString::number(tm->getMarginRiskRatio(client_id)));
 }

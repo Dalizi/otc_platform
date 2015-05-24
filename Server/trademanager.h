@@ -108,14 +108,17 @@ private:
     void acceptOrder(const OrderType &ot);
     void rejectOrder(const OrderType &ot);
     void cancelOrder(const OrderType &ot);
+    bool isOrderValid(const string &order_id);
+    bool isOrderValid(const OrderType &ot);
+    void changeOrderStatus(const string &order_id, int status);
+
+    double getTransactionPremium(const TransactionType &tt);  //获取委托所产生的的权利金
+    double getTransactionMargin(const TransactionType &tt);   //获取委托所要占用的保证金
 
 	int getOrderStatus(const string &order_id);
     int getOrderIndex();
-	void changeOrderStatus(const string &order_id, int status);
 	void errMsgBox(const string &msg);
 
-	bool isOrderValid(const string &order_id);
-    bool isOrderValid(const OrderType &ot);
 
 	void calcRun();
 	void loadContractTypeFile(const string &in_file);
@@ -129,6 +132,9 @@ private:
     CAccessRedis redis;
 	Option_Value *calc_server;
 	map<string, string> instr_code_type;
+
+public slots:
+    void resetClientBalance(int client_id);
 
 };
 

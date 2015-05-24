@@ -46,6 +46,7 @@ public:
 	double Position_PnL(PositionType Position, bool isMain);
     string getUnderlyingCode(const string &instr_code);
 	double getUnderlyingPrice(const string &instr_code);
+    int getMultiplier(const string &instr_code);    //获取合约乘数
 
 	int Delta_Hedger(vector<PositionType> &Position, double Spot_Price);
 	int Hedger_Excute(int net_delta, double price);
