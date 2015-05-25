@@ -554,7 +554,7 @@ void TradeManager::initClientBalance(int client_id, double init_balance) {
 
 void TradeManager::setClientBalance(const ClientBalance &cb) {
 	QSqlQuery  query(db);
-	query.prepare("UPDATE balance SET total_balance=?, available_balance=?, withdrawable_balance=?, occupied_margin=?  WHERE client_id=?");
+    query.prepare("UPDATE balance SET total_balance=?, available_balance=?, withdrawable_balance=?, occupied_margin=?  WHERE id=?");
 	query.addBindValue(cb.total_balance);
 	query.addBindValue(cb.available_balance);
 	query.addBindValue(cb.withdrawable_balance);
@@ -1180,11 +1180,13 @@ void TradeManager::SettleProgram()
 
 
     QDate date=QDate::currentDate();
+    string date_str=date.toString("yyyy-MM-DD").toStdString();
 
    //Get Daily Settlement File
-    string settle_file_name="SettleParameter--"+date.toString().toStdString()+".txt";
+    string settle_file_name="/home/jiangfeng/OTC_FILE/Settle_Parameter/SettleParam-"+date.toString("yyyy-MM-dd").toStdString()+".txt";
     ifstream settle_file(settle_file_name);
-
+    if (!settle_file.is_open())
+        throw runtime_error("Settle File Not Opened ! ");
     struct settledata
     {
         map<string,string> parameter;
@@ -1192,11 +1194,10 @@ void TradeManager::SettleProgram()
 
     map<string,settledata> settle_param;
     string productID;
-    while (!settle_file.eof())
+    string temp_msg;
+    while (getline(settle_file,temp_msg))
     {
-        string temp_msg;
-        settle_file>>temp_msg;
-        int pos=temp_msg.find(';');
+        int pos=temp_msg.find(' ');
         string key=temp_msg.substr(0,pos);
         string value=temp_msg.substr(pos+1);
         if (key=="ProductID")
@@ -1213,7 +1214,7 @@ void TradeManager::SettleProgram()
 
 
     //Change Parameters
-    pricing_param settle_parameter;
+    //pricing_param settle_parameter;
     float multiplier;
     float settle_underlying;
 
@@ -1223,16 +1224,14 @@ void TradeManager::SettleProgram()
         {
                calc_server->param_lock.lock();
                calc_server->value_parameter.Spot_Price=stof(i.second.parameter["Underlying"]);
-               i.second.parameter.erase("UnderlyingPrice");
-               calc_server->value_parameter.Free_Rate=stof(i.second.parameter["Free_Rate"]);
-               calc_server->value_parameter.Yield_Rate=stof(i.second.parameter["Yield_Rate"]);
-               calc_server->value_parameter.TimeToMaturity=stof(i.second.parameter["Maturity"]);
-               calc_server->value_parameter.Volatility=stof(i.second.parameter["Volatility"]);
-               calc_server->value_parameter.Value_Method=stoi(i.second.parameter["Value_Method"]);
-               calc_server->value_parameter.other_param["LastSettlePrice"]=settle_parameter.Spot_Price;
-               calc_server->value_parameter.other_param["LastSettleVola"]=settle_parameter.Volatility;
                multiplier=stoi(calc_server->value_parameter.other_param["Multiplier"]);
                settle_underlying=calc_server->value_parameter.Spot_Price;
+               calc_server->value_parameter.other_param["LastSettlePrice"]=i.second.parameter["Underlying"];
+               calc_server->value_parameter.other_param["LastSettleVola"]=i.second.parameter["Volatility"];
+               calc_server->value_parameter.Free_Rate=stof(i.second.parameter["Free_Rate"]);
+               calc_server->value_parameter.Yield_Rate=stof(i.second.parameter["Yield_Rate"]);
+               calc_server->value_parameter.Volatility=stof(i.second.parameter["Volatility"]);
+               calc_server->value_parameter.Value_Method=stoi(i.second.parameter["Value_Method"]);   
                calc_server->param_lock.unlock();
         }
         else
@@ -1247,7 +1246,7 @@ void TradeManager::SettleProgram()
         stringstream ss;
         ss<<i;
         string client_id=ss.str();
-        string settlefile="SettleFile_ClientNo_"+client_id+".txt";
+        string settlefile="/home/jiangfeng/OTC_FILE/Settle_Files/ClientNo_"+client_id+"_"+date.toString("yyyy-MM-dd").toStdString()+".txt";
         ofstream outfile(settlefile.c_str());
         ClientInfo ClientInfo;
         ClientInfo=getClientInfo(stoi(client_id));
@@ -1264,24 +1263,17 @@ void TradeManager::SettleProgram()
         outfile<<setw(25)<<setfill(' ')<<ClientInfo.client_id<<setw(20)<<setfill(' ')<<ClientInfo.client_name.toStdString()<<setw(20)<<setfill(' ')<<ClientInfo.client_level<<endl;
         outfile<<endl;
 
-       /* outfile<<"           Client Balance"<<endl;
-        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-        outfile<<setw(20)<<setfill(' ')<<"Initial Balance"<<setw(20)<<setfill(' ')<<"Current Balance"<<setw(20)<<setfill(' ')<<"Account Available"<<setw(20)<<setfill(' ')<<"Frozen Margin"<<endl;
-        ClientBalanceTrans Balance;
-        client.get_balance(Balance,stoi(client_id));
-        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-        outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<Balance.total_balance<<setw(25)<<setfill(' ')<<Balance.available_balance<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
-        outfile<<endl;*/
-
         outfile<<"           Transaction History"<<endl;
         outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
         outfile<<setw(30)<<setfill(' ')<<"Trade Date"<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort"<<setw(15)<<setfill(' ')<<"Direction";
         outfile<<setw(15)<<setfill(' ')<<"Price"<<setw(15)<<setfill(' ')<<"Amount"<<endl;
         outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+
         std::vector<TransactionType> HistTrans;
-        std::vector<TransactionType>Pos_Hold;
+        int Close_Amount=0;
         float Close_PnL=0;
         float Hold_PnL=0;
+
        HistTrans=getTransaction(stoi(client_id));
        for (auto i :HistTrans)
        {
@@ -1305,20 +1297,21 @@ void TradeManager::SettleProgram()
       for (auto i :Position)
       {
           float settle_price=calc_server->Settle_Price(i.instr_code.toStdString(),i.long_short);
-          //float settle=get_settle_price(i,pricing_param);
-          outfile<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(20)<<setfill(' ')<<i.average_price;
-          outfile<<setw(20)<<setfill(' ')<<i.total_amount<<setw(20)<<setfill(' ')<<i.available_amount<<setw(20)<<setfill(' ')<<0<<setw(20)<<setfill(' ')<<settle_price<<endl;
+         double new_margin=0;
           Hold_PnL=Hold_PnL+i.total_amount*(i.average_price-settle_price)*(i.long_short==0 ? -1:1)*multiplier;
           if (i.long_short==1)
           {
-              double new_margin=(settle_price+settle_underlying*margin_rate)*multiplier;
+              new_margin=(settle_price+settle_underlying*margin_rate)*multiplier;
               New_Margin+=new_margin;
               ss.clear();
               ss<<new_margin;
               setDB_position(stoi(client_id),i.instr_code.toStdString(),"occupied_margin",ss.str());
           }
+          outfile<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(20)<<setfill(' ')<<i.average_price;
+          outfile<<setw(20)<<setfill(' ')<<i.total_amount<<setw(20)<<setfill(' ')<<i.available_amount<<setw(20)<<setfill(' ')<<new_margin<<setw(20)<<setfill(' ')<<settle_price<<endl;
       }
 
+    outfile<<endl;
     outfile<<"           Close PnL Detail"<<endl;
     outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
     outfile<<setw(30)<<setfill(' ')<<"Trade Date"<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort";
@@ -1329,17 +1322,19 @@ void TradeManager::SettleProgram()
        if (i.time.date()==date && i.open_offset==1)
        {
            outfile<<setw(25)<<setfill(' ')<<i.time.toString().toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
-           outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<endl;
-           //output Close_PnL;
+           outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<setw(35)<<setfill(' ')<<i.close_pnl<<endl;
+           Close_Amount+=i.amount;
+           Close_PnL+=i.close_pnl;
        }
     }
 
-   /*outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-   outfile<<setw(30)<<setfill(' ')<<"Total Close Amount: "<<setw(50)<<setfill(' ')<<Close_Num;
+   outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+   outfile<<setw(30)<<setfill(' ')<<"Total Close Amount: "<<setw(50)<<setfill(' ')<<Close_Amount;
    outfile<<setw(30)<<setfill(' ')<<"Total Close PnL: "<<setw(50)<<setfill(' ')<<Close_PnL;
-   outfile<<endl;*/
+   outfile<<endl;
 
 
+    outfile<<endl;
     outfile<<"           Client Balance"<<endl;
     outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
     ClientBalance Balance;
@@ -1358,6 +1353,16 @@ void TradeManager::SettleProgram()
     outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<Balance.total_balance<<setw(25)<<setfill(' ')<<Balance.available_balance<<setw(25)<<setfill(' ')<<100000+Close_PnL+Hold_PnL;
     outfile<<setw(25)<<setfill(' ')<<0<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
     outfile<<endl;
+
+    outfile<<"           Client Risks"<<endl;
+    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+    outfile<<setw(20)<<setfill(' ')<<"Total Delta"<<setw(20)<<setfill(' ')<<"Total Gamma"<<setw(20)<<setfill(' ')<<"Total Vega"<<setw(20)<<setfill(' ')<<"Total Theta";
+    outfile<<setw(20)<<setfill(' ')<<"Risk Ratio"<<endl;
+    PositionRisk Risk=getClientGreeksSum(stoi(client_id));
+    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+    outfile<<setw(25)<<setfill(' ')<<Risk.delta<<setw(25)<<setfill(' ')<<Risk.gamma<<setw(25)<<setfill(' ')<<Risk.vega<<setw(25)<<setfill(' ')<<Risk.theta;
+    outfile<<setw(25)<<setfill(' ')<<round(Balance.occupied_margin/Balance.total_balance*10000)/100<<"%"<<endl;
+    outfile<<endl;
     }
 
 
@@ -1370,7 +1375,7 @@ void TradeManager::setDB_change(int client_id,string table,string key,string val
 {
     QSqlQuery  query(db);
     stringstream ss;
-    ss<<"UPDATE "<<table<<" SET "<<key<<"=? WHERE client_id=?";
+    ss<<"UPDATE "<<table<<" SET "<<key<<"=? WHERE id=?";
     query.prepare(QString::fromStdString(ss.str()));
     query.addBindValue(QString::fromStdString(value));
     query.addBindValue(client_id);
@@ -1384,7 +1389,7 @@ void TradeManager::setDB_position(int client_id,string instr_code,string key,str
 {
     QSqlQuery  query(db);
     stringstream ss;
-    ss<<"UPDATE position SET "<<key<<"=? WHERE client_id=? AND instr_code=?";
+    ss<<"UPDATE position SET "<<key<<"=? WHERE id=? AND instr_code=?";
     query.prepare(QString::fromStdString(ss.str()));
     query.addBindValue(QString::fromStdString(value));
     query.addBindValue(client_id);
