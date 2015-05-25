@@ -22,7 +22,8 @@ struct TransactionType {
     int amount = 0;	//成交数量
     LongShortType long_short = LONG;	//买卖方向
     OpenOffsetType open_offset = OPEN;	//开平方向
-	double underlying_price; //标的价格
+    double underlying_price = 0; //标的价格
+    double close_pnl = 0; //平仓盈亏
     LongShortType reversePosition() const { return long_short==LONG?SHORT:LONG; }
     LongShortType getPositionDirect() const { return open_offset == OPEN ? long_short:reversePosition(); }
 

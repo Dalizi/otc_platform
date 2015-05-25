@@ -63,15 +63,15 @@ public:
     double getMarketValueBalance(int client_id);
 	double getClosePrice(const PositionType &pt);
     double getCloseCashFlow(const PositionType &pt);
-    double getCloseCashFlow(const OrderType &ot);
+    double getCloseCashFlow(const TransactionType &tt);
 	PositionRisk getGreeksSum();
 	PositionRisk getClientGreeksSum(int client_id);
 	PositionRisk getGreeks(const PositionType &pt);
 	map<string, double> getCalculatedBalance(int client_id);
 	vector<Qoute> getQoute();
     
-    void setTransaction(const TransactionType &ot);
-    void setPosition(const TransactionType &ot);
+    void setTransaction(const TransactionType &tt);
+    void setPosition(TransactionType tt);
     void setPosition(const PositionType &pt);
 	void setMainPosition(const PositionType &pt);
     int setClientInfo(const ClientInfo &ci);
@@ -90,8 +90,8 @@ public:
 
     bool isPositionExist(int client_id, const QString &instr_code, int long_short);
 
-    void updatePosition(const PositionType &pt, const TransactionType &ot);
-	void updateBalance(const OrderType &ot);
+    void updatePosition(const PositionType &pt, const TransactionType &tt);
+    void updateBalance(const TransactionType &tt);
 	void updateBalance(int client_id, double adjust_value);
 
     int authPassword(int client_id, const string &passwd);

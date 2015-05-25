@@ -22,8 +22,8 @@ TradeManager::TradeManager(QObject *parent) :calc_server(new Option_Value("Trade
 {
     openDB();
 	calcRun();
-    //int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
-    int iRet = redis.Connect("127.0.0.1", 6379);
+    int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
+    //int iRet = redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;
         ss << "Redis Error: " <<iRet;
@@ -167,6 +167,7 @@ vector<TransactionType> TradeManager::getTransaction(int client_id) {
         ot.long_short = (LongShortType)query.value(6).toInt();
         ot.open_offset = (OpenOffsetType)query.value(7).toInt();
 		ot.underlying_price = query.value(8).toDouble();
+        ot.close_pnl = query.value("close_pnl").toDouble();
         ret.push_back(ot);
 
     }
@@ -230,9 +231,8 @@ void TradeManager::acceptOrder(const OrderType &ot) {
     tt.open_offset = ot.open_offset;
     tt.price = ot.price;
     tt.underlying_price = calc_server->getUnderlyingPrice(ot.instr_code.toStdString());
-    setTransaction(tt);
     changeOrderStatus(ot.order_id.toStdString(), 1);
-    updateBalance(ot);
+    updateBalance(tt);
     setPosition(tt);
 }
 
@@ -407,45 +407,52 @@ ClientBalance TradeManager::getClientBalance(int client_id) {
     return cb;
 }
 
-void TradeManager::setTransaction(const TransactionType &ot) {
+void TradeManager::setTransaction(const TransactionType &tt) {
     QSqlQuery query(db);
     query.prepare("INSERT INTO transactions (id, instr_code, "
-                  "client_id, price, amount, long_short, open_offset, underlying_price)"
-                  " VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    query.addBindValue(ot.transaction_id);
-    query.addBindValue(ot.instr_code);
+                  "client_id, price, amount, long_short, open_offset, underlying_price, close_pnl)"
+                  " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    query.addBindValue(tt.transaction_id);
+    query.addBindValue(tt.instr_code);
     //query.addBindValue(ot.time.toString("yyyyMMddhhmmss"));
-    query.addBindValue(ot.client_id);
-    query.addBindValue(ot.price);
-    query.addBindValue(ot.amount);
-    query.addBindValue((int)ot.long_short);
-    query.addBindValue((int)ot.open_offset);
-	query.addBindValue(ot.underlying_price);
+    query.addBindValue(tt.client_id);
+    query.addBindValue(tt.price);
+    query.addBindValue(tt.amount);
+    query.addBindValue((int)tt.long_short);
+    query.addBindValue((int)tt.open_offset);
+    query.addBindValue(tt.underlying_price);
+    query.addBindValue(tt.close_pnl);
 
     if (!query.exec())
         qDebug() <<"INSERTION FAILED..." <<" " <<query.lastQuery() <<" " <<query.lastError();
 }
 
-void TradeManager::setPosition(const TransactionType &ot) {
-    PositionType pt = getPosition(ot.client_id, ot.instr_code, ot.getPositionDirect());
+void TradeManager::setPosition(TransactionType tt) {
+    PositionType pt = getPosition(tt.client_id, tt.instr_code, tt.getPositionDirect());
+    if (tt.open_offset == OFFSET)
+        tt.close_pnl = (tt.price - pt.average_price) * tt.amount * getMultiplier(tt.instr_code.toStdString());
+    else
+        tt.close_pnl = 0;
+    setTransaction(tt);
 	if (pt.instr_code == "") {
-        string underlying_code = calc_server->getUnderlyingCode(ot.instr_code.toStdString());
+        string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
         int multiplier = calc_server->main_contract.multiplier;
-		pt.instr_code = ot.instr_code;
-		pt.client_id = ot.client_id;
-		pt.long_short = ot.long_short;
-        pt.total_amount = ot.amount;
+        pt.instr_code = tt.instr_code;
+        pt.client_id = tt.client_id;
+        pt.long_short = tt.long_short;
+        pt.total_amount = tt.amount;
         pt.frozen_amount = 0;
-        pt.available_amount = ot.amount;
-        pt.average_price = ot.price;
-        pt.underlying_price = calc_server->getUnderlyingPrice(ot.instr_code.toStdString());
-        if (ot.long_short == SHORT)
-            pt.occupied_margin = calc_server->Settle_Price(underlying_code, ot.long_short)
-                                * ot.amount*multiplier
-                                * getMarginRate(ot.client_id, ot.instr_code.toStdString()) + ot.amount*ot.price*multiplier;
+        pt.available_amount = tt.amount;
+        pt.average_price = tt.price;
+        pt.underlying_price = calc_server->getUnderlyingPrice(tt.instr_code.toStdString());
+        if (tt.long_short == SHORT)
+            pt.occupied_margin = calc_server->Settle_Price(underlying_code, tt.long_short)
+                                * tt.amount*multiplier
+                                * getMarginRate(tt.client_id, tt.instr_code.toStdString()) + tt.amount*tt.price*multiplier;
 		addPosition(pt);
+
     } else {
-        updatePosition(pt, ot);
+        updatePosition(pt, tt);
     }
 }
 
@@ -659,7 +666,8 @@ bool TradeManager::openDB()
                     "amount integer,"
                     "long_short integer,"
                     "open_offset integer,"
-					"underlying_price double"
+                    "underlying_price double,"
+                    "close_pnl double"
                     ");");
 	if (!query.exec())
 		qDebug() << "CREATE transaction table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
@@ -781,23 +789,23 @@ vector<PositionType> TradeManager::getAllMainAccountPosition() {
     return ret;
 }
 
-void TradeManager::updatePosition(const PositionType &pt, const TransactionType &ot) {
+void TradeManager::updatePosition(const PositionType &pt, const TransactionType &tt) {
     QSqlQuery query(db);
-    int adjust_param = ot.open_offset == OpenOffsetType::OPEN ? 1 : -1;
-    int total_amount = pt.total_amount + ot.amount * adjust_param;
-    string underlying_code = calc_server->getUnderlyingCode(ot.instr_code.toStdString());
+    int adjust_param = tt.open_offset == OpenOffsetType::OPEN ? 1 : -1;
+    int total_amount = pt.total_amount + tt.amount * adjust_param;
+    string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
     int multiplier = calc_server->main_contract.multiplier;
 
 
     double average_price, underlying_price;
     if (total_amount != 0) {
-        average_price = (pt.average_price * pt.total_amount + ot.price * ot.amount * adjust_param) / (pt.total_amount + ot.amount * adjust_param);
-        underlying_price = (pt.underlying_price * pt.total_amount + ot.underlying_price * ot.amount * adjust_param) / (pt.total_amount + ot.amount * adjust_param) ;
+        average_price = (pt.average_price * pt.total_amount + tt.price * tt.amount * adjust_param) / (pt.total_amount + tt.amount * adjust_param);
+        underlying_price = (pt.underlying_price * pt.total_amount + tt.underlying_price * tt.amount * adjust_param) / (pt.total_amount + tt.amount * adjust_param) ;
 
-        double occupied_margin = calc_server->Settle_Price(underlying_code, ot.long_short)
-                            * ot.amount*multiplier
-                            * getMarginRate(ot.client_id, ot.instr_code.toStdString()) + pt.average_price * ot.amount;
-        double margin_chng = pt.occupied_margin + (pt.long_short==LONG?0:((ot.open_offset==OPEN?1:-1)*occupied_margin));
+        double occupied_margin = calc_server->Settle_Price(underlying_code, tt.long_short)
+                            * tt.amount*multiplier
+                            * getMarginRate(tt.client_id, tt.instr_code.toStdString()) + pt.average_price * tt.amount;
+        double margin_chng = pt.occupied_margin + (pt.long_short==LONG?0:((tt.open_offset==OPEN?1:-1)*occupied_margin));
         query.prepare("UPDATE position SET total_amount=?, available_amount=?,average_price=?, underlying_price=?, occupied_margin=?"
                       "WHERE instr_code=? AND id=? AND long_short=?");
         query.addBindValue(total_amount);
@@ -819,49 +827,49 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
         qDebug() << "Update position FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 }
 
-void TradeManager::updateBalance(const OrderType &ot) {
+void TradeManager::updateBalance(const TransactionType &tt) {
 	QSqlQuery query(db);
-    string underlying_code = calc_server->getUnderlyingCode(ot.instr_code.toStdString());
+    string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
     int multiplier = calc_server->main_contract.multiplier;
     query.prepare("UPDATE balance SET total_balance =total_balance+?,"
                   "occupied_margin=occupied_margin+?,"
                   "withdrawable_balance=withdrawable_balance+?"
                   " WHERE id=?");
-    auto pt = getPosition(ot.client_id, ot.instr_code, ot.getPositionDirect());
-	if (getInstrType(ot.instr_code.toStdString()) == "option") {
-        if (ot.long_short == LONG) {
-            if (ot.open_offset == OPEN) {
-                double premium = ot.price*ot.amount*multiplier;
+    auto pt = getPosition(tt.client_id, tt.instr_code, tt.getPositionDirect());
+    if (getInstrType(tt.instr_code.toStdString()) == "option") {
+        if (tt.long_short == LONG) {
+            if (tt.open_offset == OPEN) {
+                double premium = tt.price*tt.amount*multiplier;
                 query.addBindValue(-premium);
                 query.addBindValue(0);
                 query.addBindValue(-premium);
-				query.addBindValue(ot.client_id);
+                query.addBindValue(tt.client_id);
 			}
 			else {
-                double premium = pt.average_price*ot.amount*multiplier;
-                double cash_flow = getCloseCashFlow(ot);
-                double margin = calc_server->Settle_Price(underlying_code, ot.long_short)*ot.amount*multiplier*getMarginRate(ot.client_id, ot.instr_code.toStdString());
+                double premium = pt.average_price*tt.amount*multiplier;
+                double cash_flow = getCloseCashFlow(tt);
+                double margin = calc_server->Settle_Price(underlying_code, tt.long_short)*tt.amount*multiplier*getMarginRate(tt.client_id, tt.instr_code.toStdString());
                 query.addBindValue(cash_flow);
                 query.addBindValue(-premium-margin);
                 query.addBindValue(margin);
-                query.addBindValue(ot.client_id);
+                query.addBindValue(tt.client_id);
 			}
 		} else {
-            if (ot.open_offset == OpenOffsetType::OPEN) {
-                double premium = ot.price*ot.amount*multiplier;
-                double margin = calc_server->Settle_Price(underlying_code, ot.long_short)*ot.amount*multiplier*getMarginRate(ot.client_id, ot.instr_code.toStdString());
+            if (tt.open_offset == OpenOffsetType::OPEN) {
+                double premium = tt.price*tt.amount*multiplier;
+                double margin = calc_server->Settle_Price(underlying_code, tt.long_short)*tt.amount*multiplier*getMarginRate(tt.client_id, tt.instr_code.toStdString());
                 query.addBindValue(premium);
                 query.addBindValue(premium+margin);
                 query.addBindValue(-margin);
-				query.addBindValue(ot.client_id);
+                query.addBindValue(tt.client_id);
 			}
 			else {
-                auto pos = getPosition(ot.client_id, ot.instr_code, ot.reversePosition());
-                double cash_flow = getCloseCashFlow(ot);
+                auto pos = getPosition(tt.client_id, tt.instr_code, tt.reversePosition());
+                double cash_flow = getCloseCashFlow(tt);
                 query.addBindValue(cash_flow);
                 query.addBindValue(0);
                 query.addBindValue(0);
-                query.addBindValue(ot.client_id);
+                query.addBindValue(tt.client_id);
 			}
 		}
 	}
@@ -997,9 +1005,9 @@ double TradeManager::getCloseCashFlow(const PositionType &pt) {
 }
 
 inline
-double TradeManager::getCloseCashFlow(const OrderType &ot) {
+double TradeManager::getCloseCashFlow(const TransactionType &tt) {
     //auto close_price = calc_server->Position_Quote(ot.instr_code.toStdString(), ot.getPositionDirect());
-    return (ot.getPositionDirect()==LONG?1:-1) * ot.price * ot.amount * calc_server->main_contract.multiplier;
+    return (tt.getPositionDirect()==LONG?1:-1) * tt.price * tt.amount * calc_server->main_contract.multiplier;
 }
 
 inline
