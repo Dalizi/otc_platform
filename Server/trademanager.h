@@ -103,6 +103,7 @@ public:
 
 	void redisWriteClientGreeks(int client_id);
 
+    void SettleProgram();
 private:
     //处理委托
     void acceptOrder(const OrderType &ot);
@@ -126,6 +127,8 @@ private:
 	void setHedgePosition(const PositionTypeTrans &ptt);
 	void flushRedis();
 
+    void setDB_change(int client_id,string table,string key,string value);
+    void setDB_position(int client_id,string instr_code,string key,string value);
 
 private:
     QSqlDatabase db;

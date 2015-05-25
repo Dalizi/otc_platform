@@ -1170,3 +1170,227 @@ inline
 double TradeManager::getTransactionMargin(const TransactionType &tt) {
     return 0;
 }
+
+void TradeManager::SettleProgram()
+{
+    //Get All Users List
+    int num=13;
+
+    //Get Necessary Contract Parameters
+
+
+    QDate date=QDate::currentDate();
+
+   //Get Daily Settlement File
+    string settle_file_name="SettleParameter--"+date.toString().toStdString()+".txt";
+    ifstream settle_file(settle_file_name);
+
+    struct settledata
+    {
+        map<string,string> parameter;
+    };
+
+    map<string,settledata> settle_param;
+    string productID;
+    while (!settle_file.eof())
+    {
+        string temp_msg;
+        settle_file>>temp_msg;
+        int pos=temp_msg.find(';');
+        string key=temp_msg.substr(0,pos);
+        string value=temp_msg.substr(pos+1);
+        if (key=="ProductID")
+        {
+               settledata temp;
+               settle_param[value]=temp;
+               productID=value;
+        }
+        else
+        {
+               settle_param[productID].parameter[key]=value;
+        }
+    }
+
+
+    //Change Parameters
+    pricing_param settle_parameter;
+    float multiplier;
+    float settle_underlying;
+
+    for (auto i:settle_param)
+    {
+        if (i.first=="IFX03")
+        {
+               calc_server->param_lock.lock();
+               calc_server->value_parameter.Spot_Price=stof(i.second.parameter["Underlying"]);
+               i.second.parameter.erase("UnderlyingPrice");
+               calc_server->value_parameter.Free_Rate=stof(i.second.parameter["Free_Rate"]);
+               calc_server->value_parameter.Yield_Rate=stof(i.second.parameter["Yield_Rate"]);
+               calc_server->value_parameter.TimeToMaturity=stof(i.second.parameter["Maturity"]);
+               calc_server->value_parameter.Volatility=stof(i.second.parameter["Volatility"]);
+               calc_server->value_parameter.Value_Method=stoi(i.second.parameter["Value_Method"]);
+               calc_server->value_parameter.other_param["LastSettlePrice"]=settle_parameter.Spot_Price;
+               calc_server->value_parameter.other_param["LastSettleVola"]=settle_parameter.Volatility;
+               multiplier=stoi(calc_server->value_parameter.other_param["Multiplier"]);
+               settle_underlying=calc_server->value_parameter.Spot_Price;
+               calc_server->param_lock.unlock();
+        }
+        else
+        {
+        }
+    }
+
+
+    //Settle for Each Client
+    for (int i=1;i<=num;i++)
+    {
+        stringstream ss;
+        ss<<i;
+        string client_id=ss.str();
+        string settlefile="SettleFile_ClientNo_"+client_id+".txt";
+        ofstream outfile(settlefile.c_str());
+        ClientInfo ClientInfo;
+        ClientInfo=getClientInfo(stoi(client_id));
+
+        outfile<<"           OTC Service Settlement File For Client         "<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<endl;
+        outfile<<endl;
+
+        outfile<<"           Client Infomation"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(20)<<setfill(' ')<<"Client No."<<setw(20)<<setfill(' ')<<"ClientName"<<setw(20)<<setfill(' ')<<"ClientLevel"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(25)<<setfill(' ')<<ClientInfo.client_id<<setw(20)<<setfill(' ')<<ClientInfo.client_name.toStdString()<<setw(20)<<setfill(' ')<<ClientInfo.client_level<<endl;
+        outfile<<endl;
+
+       /* outfile<<"           Client Balance"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(20)<<setfill(' ')<<"Initial Balance"<<setw(20)<<setfill(' ')<<"Current Balance"<<setw(20)<<setfill(' ')<<"Account Available"<<setw(20)<<setfill(' ')<<"Frozen Margin"<<endl;
+        ClientBalanceTrans Balance;
+        client.get_balance(Balance,stoi(client_id));
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<Balance.total_balance<<setw(25)<<setfill(' ')<<Balance.available_balance<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
+        outfile<<endl;*/
+
+        outfile<<"           Transaction History"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(30)<<setfill(' ')<<"Trade Date"<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort"<<setw(15)<<setfill(' ')<<"Direction";
+        outfile<<setw(15)<<setfill(' ')<<"Price"<<setw(15)<<setfill(' ')<<"Amount"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        std::vector<TransactionType> HistTrans;
+        std::vector<TransactionType>Pos_Hold;
+        float Close_PnL=0;
+        float Hold_PnL=0;
+       HistTrans=getTransaction(stoi(client_id));
+       for (auto i :HistTrans)
+       {
+           if (i.time.date()==date){
+           outfile<<setw(25)<<setfill(' ')<<i.time.toString().toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
+           outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<endl;
+           }
+       }
+
+       outfile<<endl;
+       outfile<<"           Account Position"<<endl;
+       outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+       outfile<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort"<<setw(15)<<setfill(' ')<<"Price.Avg";
+       outfile<<setw(15)<<setfill(' ')<<"Total No"<<setw(15)<<setfill(' ')<<"No.Avail"<<setw(15)<<setfill(' ')<<"Margin"<<setw(15)<<setfill(' ')<<"ClosePrice"<<endl;
+       outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+       std::vector<PositionType> Position;
+       Position=getAllPosition(stoi(client_id));
+      double New_Margin=0;
+
+      float margin_rate=0.05;
+      for (auto i :Position)
+      {
+          float settle_price=calc_server->Settle_Price(i.instr_code.toStdString(),i.long_short);
+          //float settle=get_settle_price(i,pricing_param);
+          outfile<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(20)<<setfill(' ')<<i.average_price;
+          outfile<<setw(20)<<setfill(' ')<<i.total_amount<<setw(20)<<setfill(' ')<<i.available_amount<<setw(20)<<setfill(' ')<<0<<setw(20)<<setfill(' ')<<settle_price<<endl;
+          Hold_PnL=Hold_PnL+i.total_amount*(i.average_price-settle_price)*(i.long_short==0 ? -1:1)*multiplier;
+          if (i.long_short==1)
+          {
+              double new_margin=(settle_price+settle_underlying*margin_rate)*multiplier;
+              New_Margin+=new_margin;
+              ss.clear();
+              ss<<new_margin;
+              setDB_position(stoi(client_id),i.instr_code.toStdString(),"occupied_margin",ss.str());
+          }
+      }
+
+    outfile<<"           Close PnL Detail"<<endl;
+    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+    outfile<<setw(30)<<setfill(' ')<<"Trade Date"<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort";
+    outfile<<setw(15)<<setfill(' ')<<"Price"<<setw(15)<<setfill(' ')<<"Amount"<<setw(15)<<setfill(' ')<<"ClosePnL"<<endl;
+    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+    for (auto i :HistTrans)
+    {
+       if (i.time.date()==date && i.open_offset==1)
+       {
+           outfile<<setw(25)<<setfill(' ')<<i.time.toString().toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
+           outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<endl;
+           //output Close_PnL;
+       }
+    }
+
+   /*outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+   outfile<<setw(30)<<setfill(' ')<<"Total Close Amount: "<<setw(50)<<setfill(' ')<<Close_Num;
+   outfile<<setw(30)<<setfill(' ')<<"Total Close PnL: "<<setw(50)<<setfill(' ')<<Close_PnL;
+   outfile<<endl;*/
+
+
+    outfile<<"           Client Balance"<<endl;
+    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+    ClientBalance Balance;
+    Balance=getBalance(stoi(client_id));
+    //Set Balance Occupied Margin
+    Balance.occupied_margin=New_Margin;
+    //Set Balance Available_Balance
+    Balance.available_balance=Balance.total_balance-Balance.occupied_margin;
+    //Set Balance Withdraw_Balance
+    Balance.withdrawable_balance=Balance.available_balance;
+    setClientBalance(Balance);
+    outfile<<setw(20)<<setfill(' ')<<"Initial Balance"<<setw(20)<<setfill(' ')<<"Total Balance"<<setw(20)<<setfill(' ')<<"Account Available"<<setw(20)<<setfill(' ')<<"Market Value";
+    outfile<<setw(20)<<setfill(' ')<<"Cash WithDraw"<<setw(20)<<setfill(' ')<<"Frozen Margin"<<endl;
+
+    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+    outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<Balance.total_balance<<setw(25)<<setfill(' ')<<Balance.available_balance<<setw(25)<<setfill(' ')<<100000+Close_PnL+Hold_PnL;
+    outfile<<setw(25)<<setfill(' ')<<0<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
+    outfile<<endl;
+    }
+
+
+  cout<<"Settlement Program Finish!"<<endl;
+  int cc;
+  cin>>cc;
+}
+
+void TradeManager::setDB_change(int client_id,string table,string key,string value)
+{
+    QSqlQuery  query(db);
+    stringstream ss;
+    ss<<"UPDATE "<<table<<" SET "<<key<<"=? WHERE client_id=?";
+    query.prepare(QString::fromStdString(ss.str()));
+    query.addBindValue(QString::fromStdString(value));
+    query.addBindValue(client_id);
+    if (!query.exec())
+        qDebug() << "SET balance FAILED... " << query.lastQuery() << " " << query.lastError();
+
+    return;
+}
+
+void TradeManager::setDB_position(int client_id,string instr_code,string key,string value)
+{
+    QSqlQuery  query(db);
+    stringstream ss;
+    ss<<"UPDATE position SET "<<key<<"=? WHERE client_id=? AND instr_code=?";
+    query.prepare(QString::fromStdString(ss.str()));
+    query.addBindValue(QString::fromStdString(value));
+    query.addBindValue(client_id);
+    query.addBindValue(QString::fromStdString(instr_code));
+    if (!query.exec())
+        qDebug() << "SET balance FAILED... " << query.lastQuery() << " " << query.lastError();
+
+    return;
+}

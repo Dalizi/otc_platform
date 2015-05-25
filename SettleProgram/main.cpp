@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
 
 
 
-    outfile<<"           Client Balance"<<endl;
+     outfile<<"           Client Balance"<<endl;
      outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
      //Set Balance Occupied Margin
      //Set Balance Available_Balance
