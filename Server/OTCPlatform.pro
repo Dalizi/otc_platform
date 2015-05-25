@@ -15,7 +15,6 @@ TEMPLATE = app
 
 DEFINES += NOMINMAX
 
-INCLUDEPATH += include
 SOURCES += main.cpp\
         mainwindow.cpp \
     tradetypes.cpp \
