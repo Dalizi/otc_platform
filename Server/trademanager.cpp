@@ -1278,7 +1278,7 @@ void TradeManager::SettleProgram()
        for (auto i :HistTrans)
        {
            if (i.time.date()==date){
-           outfile<<setw(25)<<setfill(' ')<<i.time.toString().toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
+           outfile<<setw(25)<<setfill(' ')<<i.time.toString("yyyy-MM-dd hh:mm").toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
            outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<endl;
            }
        }
@@ -1287,7 +1287,7 @@ void TradeManager::SettleProgram()
        outfile<<"           Account Position"<<endl;
        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
        outfile<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort"<<setw(15)<<setfill(' ')<<"Price.Avg";
-       outfile<<setw(15)<<setfill(' ')<<"Total No"<<setw(15)<<setfill(' ')<<"No.Avail"<<setw(15)<<setfill(' ')<<"Margin"<<setw(15)<<setfill(' ')<<"ClosePrice"<<endl;
+       outfile<<setw(15)<<setfill(' ')<<"Total No"<<setw(15)<<setfill(' ')<<"No.Avail"<<setw(15)<<setfill(' ')<<"Margin"<<setw(15)<<setfill(' ')<<"SettlePrice"<<endl;
        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
        std::vector<PositionType> Position;
        Position=getAllPosition(stoi(client_id));
@@ -1321,7 +1321,7 @@ void TradeManager::SettleProgram()
     {
        if (i.time.date()==date && i.open_offset==1)
        {
-           outfile<<setw(25)<<setfill(' ')<<i.time.toString().toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
+           outfile<<setw(25)<<setfill(' ')<<i.time.toString("yyyy-MM-dd hh:mm").toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
            outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<setw(35)<<setfill(' ')<<i.close_pnl<<endl;
            Close_Amount+=i.amount;
            Close_PnL+=i.close_pnl;
