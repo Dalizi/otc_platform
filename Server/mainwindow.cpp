@@ -233,11 +233,11 @@ void MainWindow::onResetBalanceButtonClicked() {
 void MainWindow::updateClientBalance() {
     int client_id = ui->khbhLineEdit->text().toInt();
     auto balance = tm->getBalance(client_id);
-    ui->marketValueBalanceLineEdit->setText(QString::number(tm->getMarketValueBalance(client_id)));
-    ui->totalBalanceLineEdit->setText(QString::number(balance.total_balance));
-    ui->occupiedMarginLineEdit->setText(QString::number(balance.occupied_margin));
-    ui->withdrawableBalanceLineEdit->setText(QString::number(balance.withdrawable_balance));
-    ui->availableBalanceLineEdit->setText(QString::number(tm->getAvailableBalance(client_id)));
-    ui->frozenBalanceLineEdit->setText(QString::number(tm->getFrozenBalance(client_id)));
-    ui->marginRatioLineEdit->setText(QString::number(tm->getMarginRiskRatio(client_id)));
+    ui->marketValueBalanceLineEdit->setText(QString::number(tm->getMarketValueBalance(client_id), 'f'));
+    ui->totalBalanceLineEdit->setText(QString::number(balance.total_balance, 'f'));
+    ui->occupiedMarginLineEdit->setText(QString::number(balance.occupied_margin, 'f'));
+    ui->withdrawableBalanceLineEdit->setText(QString::number(balance.withdrawable_balance, 'f'));
+    ui->availableBalanceLineEdit->setText(QString::number(tm->getAvailableBalance(client_id), 'f'));
+    ui->frozenBalanceLineEdit->setText(QString::number(tm->getFrozenBalance(client_id), 'f'));
+    ui->marginRatioLineEdit->setText(QString::number(tm->getMarginRiskRatio(client_id), 'f'));
 }
