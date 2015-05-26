@@ -1,0 +1,6 @@
+.gitignore
+*.pro.user
+*.pro.user.*
+build-OTCClient-Desktop_Qt_5_4_1_GCC_64bit-Debug/
+build-OTCPlatform-Desktop_Qt_5_4_1_GCC_64bit-Debug/
+

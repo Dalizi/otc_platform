@@ -14,12 +14,12 @@
 
 
 int _kLongShortTypeValues[] = {
-  LONG,
-  SHORT
+  LONG_ORDER,
+  SHORT_ORDER
 };
 const char* _kLongShortTypeNames[] = {
-  "LONG",
-  "SHORT"
+  "LONG_ORDER",
+  "SHORT_ORDER"
 };
 const std::map<int, const char*> _LongShortType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(2, _kLongShortTypeValues, _kLongShortTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 

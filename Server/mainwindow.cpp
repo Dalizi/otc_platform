@@ -167,7 +167,7 @@ void MainWindow::setTransactionLine(QTableWidget *qtw, TransactionType ot, int r
     qtw->setItem(row, column++, new QTableWidgetItem(ot.instr_code));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.amount)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short == LONG ? "Buy" : "Sell")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short == LONG_ORDER ? "Buy" : "Sell")));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.open_offset==OPEN?"Open":"Offset")));
     qtw->setItem(row, column++, new QTableWidgetItem(ot.time.toString("yyyy-MM-dd hh:mm:ss")));
 
@@ -179,7 +179,7 @@ void MainWindow::setOrderLine(QTableWidget *qtw, OrderType ot, int row) {
 	qtw->setItem(row, column++, new QTableWidgetItem(ot.instr_code));
 	qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.price)));
 	qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.amount)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short == LONG ? "Buy" : "Sell")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short == LONG_ORDER ? "Buy" : "Sell")));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.open_offset == OPEN ? "Open" : "Offset")));
 	qtw->setItem(row, column++, new QTableWidgetItem(ot.time.toString("yyyy-MM-dd hh:mm:ss")));
 	qtw->setItem(row, column++, new QTableWidgetItem(order_status_strs[(int)ot.order_status]));
@@ -201,7 +201,7 @@ void MainWindow::refreshRevenue(QTableWidget *qtw, bool isMain) {
 		pt.instr_code = qtw->item(i, 0)->text();
         pt.total_amount = qtw->item(i, 1)->text().toInt();
         pt.average_price = qtw->item(i, 4)->text().toDouble();
-        pt.long_short = qtw->item(i, 6)->text()=="Buy"?LONG:SHORT;
+        pt.long_short = qtw->item(i, 6)->text()=="Buy"?LONG_ORDER:SHORT_ORDER;
 		auto revenue = tm->getPnL(pt, isMain);
         qtw->item(i, 5)->setText(QString::number(revenue));
     }
@@ -234,11 +234,11 @@ void MainWindow::onResetBalanceButtonClicked() {
 void MainWindow::updateClientBalance() {
     int client_id = ui->khbhLineEdit->text().toInt();
     auto balance = tm->getBalance(client_id);
-    ui->marketValueBalanceLineEdit->setText(QString::number(tm->getMarketValueBalance(client_id)));
-    ui->totalBalanceLineEdit->setText(QString::number(balance.total_balance));
-    ui->occupiedMarginLineEdit->setText(QString::number(balance.occupied_margin));
-    ui->withdrawableBalanceLineEdit->setText(QString::number(balance.withdrawable_balance));
-    ui->availableBalanceLineEdit->setText(QString::number(tm->getAvailableBalance(client_id)));
-    ui->frozenBalanceLineEdit->setText(QString::number(tm->getFrozenBalance(client_id)));
-    ui->marginRatioLineEdit->setText(QString::number(tm->getMarginRiskRatio(client_id)));
+    ui->marketValueBalanceLineEdit->setText(QString::number(tm->getMarketValueBalance(client_id), 'f'));
+    ui->totalBalanceLineEdit->setText(QString::number(balance.total_balance, 'f'));
+    ui->occupiedMarginLineEdit->setText(QString::number(balance.occupied_margin, 'f'));
+    ui->withdrawableBalanceLineEdit->setText(QString::number(balance.withdrawable_balance, 'f'));
+    ui->availableBalanceLineEdit->setText(QString::number(tm->getAvailableBalance(client_id), 'f'));
+    ui->frozenBalanceLineEdit->setText(QString::number(tm->getFrozenBalance(client_id), 'f'));
+    ui->marginRatioLineEdit->setText(QString::number(tm->getMarginRiskRatio(client_id), 'f'));
 }

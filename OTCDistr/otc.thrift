@@ -1,13 +1,10 @@
 /*
 *OTC RPC IDL file
-*作者：谭泽寰(tanzehuan@cofco.com)
-*本文件定义了场外交易平台客户端与服务器通讯中所需要的数据格式以及服务。
-*用来实现客户基本信息，持仓，资金，委托查询，以及服务器推送报价的功能。
 */
 
 enum LongShortType {
-	LONG,
-	SHORT
+	LONG_ORDER,
+	SHORT_ORDER
 }
 
 enum OpenOffsetType {
