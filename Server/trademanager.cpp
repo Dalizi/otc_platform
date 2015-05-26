@@ -1297,6 +1297,7 @@ void TradeManager::SettleProgram()
        std::vector<PositionType> Position;
        Position=getAllPosition(stoi(client_id));
       double New_Margin=0;
+      double Close_Value=0;
 
       float margin_rate=0.05;
       for (auto i :Position)
@@ -1306,7 +1307,7 @@ void TradeManager::SettleProgram()
           Hold_PnL=Hold_PnL+i.total_amount*(i.average_price-settle_price)*(i.long_short==0 ? -1:1)*multiplier;
           if (i.long_short==1)
           {
-              new_margin=(settle_price+settle_underlying*margin_rate)*multiplier;
+              new_margin=(settle_price+settle_underlying*margin_rate)*multiplier*i.total_amount;
               New_Margin+=new_margin;
               ss.clear();
               ss<<new_margin;
@@ -1314,6 +1315,7 @@ void TradeManager::SettleProgram()
           }
           outfile<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(20)<<setfill(' ')<<i.average_price;
           outfile<<setw(20)<<setfill(' ')<<i.total_amount<<setw(20)<<setfill(' ')<<i.available_amount<<setw(20)<<setfill(' ')<<new_margin<<setw(20)<<setfill(' ')<<settle_price<<endl;
+          Close_Value+=(i.long_short==0 ? 1:-1)*i.total_amount*settle_price*multiplier;
       }
 
     outfile<<endl;
@@ -1355,8 +1357,8 @@ void TradeManager::SettleProgram()
     outfile<<setw(20)<<setfill(' ')<<"Cash WithDraw"<<setw(20)<<setfill(' ')<<"Frozen Margin"<<endl;
 
     outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<Balance.total_balance<<setw(25)<<setfill(' ')<<Balance.available_balance<<setw(25)<<setfill(' ')<<100000+Close_PnL+Hold_PnL;
-    outfile<<setw(25)<<setfill(' ')<<0<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
+    outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<Balance.total_balance<<setw(25)<<setfill(' ')<<Balance.available_balance<<setw(25)<<setfill(' ')<<Balance.total_balance+Close_Value;
+    outfile<<setw(25)<<setfill(' ')<<Balance.withdrawable_balance<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
     outfile<<endl;
 
     outfile<<"           Client Risks"<<endl;
