@@ -16,7 +16,7 @@ class orderPlaceDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit orderPlaceDialog(ClientServiceClient *csc, QouteTrans *qt, bool is_close=false, LongShortType ls=LONG, QWidget *parent = 0);
+    explicit orderPlaceDialog(ClientServiceClient *csc, QouteTrans *qt, bool is_close=false, LongShortType ls=LONG_ORDER, QWidget *parent = 0);
     ~orderPlaceDialog();
 
 private:

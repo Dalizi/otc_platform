@@ -20,11 +20,11 @@ struct TransactionType {
     int client_id = 0;	//客户编号
     double price = 0;	//成交价格
     int amount = 0;	//成交数量
-    LongShortType long_short = LONG;	//买卖方向
+    LongShortType long_short = LONG_ORDER;	//买卖方向
     OpenOffsetType open_offset = OPEN;	//开平方向
     double underlying_price = 0; //标的价格
     double close_pnl = 0; //平仓盈亏
-    LongShortType reversePosition() const { return long_short==LONG?SHORT:LONG; }
+    LongShortType reversePosition() const { return long_short==LONG_ORDER?SHORT_ORDER:LONG_ORDER; }
     LongShortType getPositionDirect() const { return open_offset == OPEN ? long_short:reversePosition(); }
 
 };
@@ -36,10 +36,10 @@ struct OrderType {
 	int client_id = 0;	//客户编号
 	double price = 0;	//委托价格
 	int amount = 0;	//委托数量
-    LongShortType long_short = LONG;	//买卖方向
+    LongShortType long_short = LONG_ORDER;	//买卖方向
     OpenOffsetType open_offset = OPEN;	//开平方向
     OrderStatusType order_status = REPORTED; //委托状态
-    LongShortType reversePosition() const { return long_short==LONG?SHORT:LONG; }
+    LongShortType reversePosition() const { return long_short==LONG_ORDER?SHORT_ORDER:LONG_ORDER; }
     LongShortType getPositionDirect() const { return open_offset == OPEN ? long_short:reversePosition(); }
 };
 
@@ -52,7 +52,7 @@ struct PositionType {
     int frozen_amount = 0; //冻结数量
     double occupied_margin = 0;
     double underlying_price = 0;
-    LongShortType long_short = LONG; //买卖方向
+    LongShortType long_short = LONG_ORDER; //买卖方向
 };
 
 struct ClientInfo {

@@ -28,7 +28,7 @@ void orderPlaceDialog::onAccepted() {
     ot.price = stod(ui->priceLineEdit->text().toStdString());
     ot.amount = stoi(ui->quantLineEdit->text().toStdString());
     ot.open_offset = ui->openRadioButton->isChecked() ? OPEN:OFFSET;
-    ot.long_short = ui->longRadioButton->isChecked()?LONG:SHORT;
+    ot.long_short = ui->longRadioButton->isChecked()?LONG_ORDER:SHORT_ORDER;
     ss <<setfill('0') <<setw(8) <<QDate::currentDate().toString("yyyyMMdd").toStdString();
     ss <<setfill('0') <<setw(8) <<base_id;
     ot.transaction_id = QString::fromStdString(ss.str());
