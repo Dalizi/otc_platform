@@ -22,8 +22,8 @@ TradeManager::TradeManager(QObject *parent) :calc_server(new Option_Value("Trade
 {
     openDB();
 	calcRun();
-    int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
-    //int iRet = redis.Connect("127.0.0.1", 6379);
+    //int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
+    int iRet = redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;
         ss << "Redis Error: " <<iRet;
@@ -1176,7 +1176,7 @@ double TradeManager::getTransactionMargin(const TransactionType &tt) {
     return 0;
 }
 
-void TradeManager::SettleProgram()
+void TradeManager::settleProgram()
 {
     //Get All Users List
     int num=13;

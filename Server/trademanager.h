@@ -102,8 +102,6 @@ public:
 	void updateHedgePosition(const vector<PositionTypeTrans> &hedge_positions);
 
 	void redisWriteClientGreeks(int client_id);
-
-    void SettleProgram();
 private:
     //处理委托
     void acceptOrder(const OrderType &ot);
@@ -138,6 +136,7 @@ private:
 
 public slots:
     void resetClientBalance(int client_id);
+    void settleProgram();
 
 };
 

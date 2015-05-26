@@ -20,8 +20,8 @@ Option_Value::Option_Value(string infile_location, TradeManager *tm) : tm(tm)
 
 
     string host("10.2.6.31");
-    int iRet = my_redis.Connect(host, 6379, "Finders6");
-    //int iRet = my_redis.Connect("127.0.0.1", 6379);
+    //int iRet = my_redis.Connect(host, 6379, "Finders6");
+    int iRet = my_redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;
         ss << "Redis Error: " <<iRet;

@@ -34,6 +34,7 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
     connect(ui->initClientBalancePushButton, SIGNAL(clicked()), this, SLOT(onResetBalanceButtonClicked()));
     connect(this, SIGNAL(resetBalance(int)), tm.get(), SLOT(resetClientBalance(int)));
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateClientBalance()));
+    connect(ui->settlePushButton, SIGNAL(clicked()), tm.get(), SLOT(settleProgram()));
     redisWriteClientGreeks();
     ui->mainAccountPositionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->reportedOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
