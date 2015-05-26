@@ -967,7 +967,7 @@ bool TradeManager::isOrderValid(const OrderType &ot) {
     if (ot.open_offset == OPEN && ot.long_short == LONG && ot.amount * ot.price*multiplier > getAvailableBalance(ot.client_id))
         return false;
     if (ot.open_offset == OPEN && ot.long_short == SHORT &&
-        ot.amount * calc_server->Price_Qoute(ot.instr_code.toStdString()) / getMultiplier(ot.instr_code.toStdString()) - ot.amount *ot.price*multiplier > getAvailableBalance(ot.client_id))
+        ot.amount * calc_server->Price_Qoute(ot.instr_code.toStdString()) / getMultiplier(ot.instr_code.toStdString())> getAvailableBalance(ot.client_id))
         return false;
     return true;
 
