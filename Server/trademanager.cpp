@@ -799,8 +799,13 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
 
     double average_price, underlying_price;
     if (total_amount != 0) {
-        average_price = (pt.average_price * pt.total_amount + tt.price * tt.amount * adjust_param) / (pt.total_amount + tt.amount * adjust_param);
-        underlying_price = (pt.underlying_price * pt.total_amount + tt.underlying_price * tt.amount * adjust_param) / (pt.total_amount + tt.amount * adjust_param) ;
+        if (tt.open_offset == OPEN) {
+            average_price = (pt.average_price * pt.total_amount + tt.price * tt.amount)/ (pt.total_amount + tt.amount);
+            underlying_price = (pt.underlying_price * pt.total_amount + tt.underlying_price * tt.amount) / (pt.total_amount + tt.amount) ;
+        } else {
+            average_price = pt.average_price;
+            underlying_price = pt.underlying_price;
+        }
 
         double occupied_margin = calc_server->Settle_Price(underlying_code, tt.long_short)
                             * tt.amount*multiplier
