@@ -430,7 +430,7 @@ void TradeManager::setTransaction(const TransactionType &tt) {
 void TradeManager::setPosition(TransactionType tt) {
     PositionType pt = getPosition(tt.client_id, tt.instr_code, tt.getPositionDirect());
     if (tt.open_offset == OFFSET)
-        tt.close_pnl = (tt.price - pt.average_price) * tt.amount * getMultiplier(tt.instr_code.toStdString());
+        tt.close_pnl = (tt.getPositionDirect() == LONG?1:-1) * (tt.price - pt.average_price) * tt.amount * getMultiplier(tt.instr_code.toStdString());
     else
         tt.close_pnl = 0;
     setTransaction(tt);

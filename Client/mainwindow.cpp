@@ -44,12 +44,12 @@ void MainWindow::start() {
     connect(ui->positionTableWidget, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(onPositionCellDoubleClicked(int,int)));
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateQoute()));
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateBalance()));
-    ui->qouteTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->positionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->intraDayOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->histOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->intraDayTransactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->histTransactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->qouteTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->positionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->intraDayOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->histOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->intraDayTransactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->histTransactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     timer.start(1000);
 }
