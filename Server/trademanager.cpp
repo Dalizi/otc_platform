@@ -582,6 +582,7 @@ ClientBalance TradeManager::getBalance(int client_id) {
     if (!query.exec())
         qDebug() << "GET balance FAILED... " << query.lastQuery() << " " << query.lastError();
     if (query.next()) {
+        cb.client_id = client_id;
         cb.total_balance = query.value(0).toDouble();
         cb.available_balance = query.value(1).toDouble();
         cb.withdrawable_balance = query.value(2).toDouble();
