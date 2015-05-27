@@ -1327,6 +1327,7 @@ void TradeManager::settleProgram()
         for (auto i :Position)
         {
             float settle_price=calc_server->Settle_Price(i.instr_code.toStdString(),i.long_short);
+            settle_price=round(settle_price*100)/100;
             double new_margin=0;
             Hold_PnL=Hold_PnL+i.total_amount*(i.average_price-settle_price)*(i.long_short==0 ? -1:1)*multiplier;
             if (i.long_short==1)
