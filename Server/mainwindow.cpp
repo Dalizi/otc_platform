@@ -34,6 +34,7 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
     connect(ui->initClientBalancePushButton, SIGNAL(clicked()), this, SLOT(onResetBalanceButtonClicked()));
     connect(this, SIGNAL(resetBalance(int)), tm.get(), SLOT(resetClientBalance(int)));
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateClientBalance()));
+    connect(ui->settlePushButton, SIGNAL(clicked()), tm.get(), SLOT(settleProgram()));
     redisWriteClientGreeks();
     ui->mainAccountPositionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->reportedOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -166,7 +167,7 @@ void MainWindow::setTransactionLine(QTableWidget *qtw, TransactionType ot, int r
     qtw->setItem(row, column++, new QTableWidgetItem(ot.instr_code));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.amount)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short == LONG ? "Buy" : "Sell")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short == LONG_ORDER ? "Buy" : "Sell")));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.open_offset==OPEN?"Open":"Offset")));
     qtw->setItem(row, column++, new QTableWidgetItem(ot.time.toString("yyyy-MM-dd hh:mm:ss")));
 
@@ -178,7 +179,7 @@ void MainWindow::setOrderLine(QTableWidget *qtw, OrderType ot, int row) {
 	qtw->setItem(row, column++, new QTableWidgetItem(ot.instr_code));
 	qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.price)));
 	qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.amount)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short == LONG ? "Buy" : "Sell")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short == LONG_ORDER ? "Buy" : "Sell")));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.open_offset == OPEN ? "Open" : "Offset")));
 	qtw->setItem(row, column++, new QTableWidgetItem(ot.time.toString("yyyy-MM-dd hh:mm:ss")));
 	qtw->setItem(row, column++, new QTableWidgetItem(order_status_strs[(int)ot.order_status]));
@@ -200,7 +201,7 @@ void MainWindow::refreshRevenue(QTableWidget *qtw, bool isMain) {
 		pt.instr_code = qtw->item(i, 0)->text();
         pt.total_amount = qtw->item(i, 1)->text().toInt();
         pt.average_price = qtw->item(i, 4)->text().toDouble();
-        pt.long_short = qtw->item(i, 6)->text()=="Buy"?LONG:SHORT;
+        pt.long_short = qtw->item(i, 6)->text()=="Buy"?LONG_ORDER:SHORT_ORDER;
 		auto revenue = tm->getPnL(pt, isMain);
         qtw->item(i, 5)->setText(QString::number(revenue));
     }

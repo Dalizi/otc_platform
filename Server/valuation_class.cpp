@@ -20,8 +20,8 @@ Option_Value::Option_Value(string infile_location, TradeManager *tm) : tm(tm)
 
 
     string host("10.2.6.31");
-    int iRet = my_redis.Connect(host, 6379, "Finders6");
-    //int iRet = my_redis.Connect("127.0.0.1", 6379);
+    //int iRet = my_redis.Connect(host, 6379, "Finders6");
+    int iRet = my_redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;
         ss << "Redis Error: " <<iRet;
@@ -359,10 +359,10 @@ double Option_Value::Position_PnL(PositionType Position, bool isMain)
 			temp_param.TimeToMaturity = maturity;
 			double spread = Basis_Spread(temp_param.other_param);
 			if (isMain) {
-                spread *= (Position.long_short == LONG ? 1 : -1);
+                spread *= (Position.long_short == LONG_ORDER ? 1 : -1);
 			}
 			else {
-                spread *= (Position.long_short == LONG ? -1 : 1);
+                spread *= (Position.long_short == LONG_ORDER ? -1 : 1);
 			}
 			temp_param.Volatility = spread/3 + Volatility_Adjustment(basic_vola, maturity, strike);
 
@@ -645,7 +645,7 @@ double Option_Value::Position_Quote(const string &instr_code, LongShortType ls)
 		temp_param.Strike_Price = strike;
 		temp_param.TimeToMaturity = maturity;
         double spread = Basis_Spread(temp_param.other_param);
-        temp_param.Volatility = (ls == LONG ? -1 : 1) * spread/3 + Volatility_Adjustment(basic_vola, maturity, strike);
+        temp_param.Volatility = (ls == LONG_ORDER ? -1 : 1) * spread/3 + Volatility_Adjustment(basic_vola, maturity, strike);
 
 		switch (temp_param.Value_Method)
 		{
@@ -693,7 +693,7 @@ double Option_Value::Settle_Price(const string &instr_code, LongShortType long_s
 		temp_param.Strike_Price = strike;
 		temp_param.TimeToMaturity = maturity;
 		double spread = Basis_Spread(temp_param.other_param);
-        temp_param.Volatility = (long_short == LONG ? -1 : 1) * spread + Volatility_Adjustment(basic_vola, maturity, strike);
+        temp_param.Volatility = (long_short == LONG_ORDER ? -1 : 1) * spread + Volatility_Adjustment(basic_vola, maturity, strike);
 
 		switch (temp_param.Value_Method)
 		{

@@ -22,8 +22,8 @@ TradeManager::TradeManager(QObject *parent) :calc_server(new Option_Value("Trade
 {
     openDB();
 	calcRun();
-    int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
-    //int iRet = redis.Connect("127.0.0.1", 6379);
+    //int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
+    int iRet = redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;
         ss << "Redis Error: " <<iRet;
@@ -62,21 +62,21 @@ void TradeManager::calcRun() {
 	temp_position.client_id = 1;
 	temp_position.instr_code = "OTC-IFX03C00-2015-06-03-3500";
 	temp_position.total_amount = 10;
-    temp_position.long_short = LONG;
+    temp_position.long_short = LONG_ORDER;
 	calc_server->Total_Position.push_back(temp_position);
 
 	temp_position.average_price = 120;
 	temp_position.client_id = 1;
 	temp_position.instr_code = "OTC-IFX03P00-2015-06-05-3450";
 	temp_position.total_amount = 5;
-    temp_position.long_short = LONG;
+    temp_position.long_short = LONG_ORDER;
 	calc_server->Total_Position.push_back(temp_position);
 
 	temp_position.average_price = 240;
 	temp_position.client_id = 1;
 	temp_position.instr_code = "OTC-IFX03C00-2015-06-011-3570";
 	temp_position.total_amount = 13;
-    temp_position.long_short = SHORT;
+    temp_position.long_short = SHORT_ORDER;
 	calc_server->Total_Position.push_back(temp_position);
 
 	calc_server->Start();
@@ -430,7 +430,7 @@ void TradeManager::setTransaction(const TransactionType &tt) {
 void TradeManager::setPosition(TransactionType tt) {
     PositionType pt = getPosition(tt.client_id, tt.instr_code, tt.getPositionDirect());
     if (tt.open_offset == OFFSET)
-        tt.close_pnl = (tt.getPositionDirect() == LONG?1:-1) * (tt.price - pt.average_price) * tt.amount * getMultiplier(tt.instr_code.toStdString());
+        tt.close_pnl = (tt.getPositionDirect() == LONG_ORDER?1:-1) * (tt.price - pt.average_price) * tt.amount * getMultiplier(tt.instr_code.toStdString());
     else
         tt.close_pnl = 0;
     setTransaction(tt);
@@ -445,7 +445,7 @@ void TradeManager::setPosition(TransactionType tt) {
         pt.available_amount = tt.amount;
         pt.average_price = tt.price;
         pt.underlying_price = calc_server->getUnderlyingPrice(tt.instr_code.toStdString());
-        if (tt.long_short == SHORT)
+        if (tt.long_short == SHORT_ORDER)
             pt.occupied_margin = calc_server->Settle_Price(underlying_code, tt.long_short)
                                 * tt.amount*multiplier
                                 * getMarginRate(tt.client_id, tt.instr_code.toStdString()) + tt.amount*tt.price*multiplier;
@@ -810,7 +810,7 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
         double occupied_margin = calc_server->Settle_Price(underlying_code, tt.long_short)
                             * tt.amount*multiplier
                             * getMarginRate(tt.client_id, tt.instr_code.toStdString()) + pt.average_price * tt.amount;
-        double margin_chng = pt.occupied_margin + (pt.long_short==LONG?0:((tt.open_offset==OPEN?1:-1)*occupied_margin));
+        double margin_chng = pt.occupied_margin + (pt.long_short==LONG_ORDER?0:((tt.open_offset==OPEN?1:-1)*occupied_margin));
         query.prepare("UPDATE position SET total_amount=?, available_amount=?,average_price=?, underlying_price=?, occupied_margin=?"
                       "WHERE instr_code=? AND id=? AND long_short=?");
         query.addBindValue(total_amount);
@@ -842,7 +842,7 @@ void TradeManager::updateBalance(const TransactionType &tt) {
                   " WHERE id=?");
     auto pt = getPosition(tt.client_id, tt.instr_code, tt.getPositionDirect());
     if (getInstrType(tt.instr_code.toStdString()) == "option") {
-        if (tt.long_short == LONG) {
+        if (tt.long_short == LONG_ORDER) {
             if (tt.open_offset == OPEN) {
                 double premium = tt.price*tt.amount*multiplier;
                 query.addBindValue(-premium);
@@ -949,9 +949,9 @@ bool TradeManager::isOrderValid(const string &order_id) {
     if (ot.open_offset == OFFSET && ot.amount > pt.available_amount)
 		return false;
 	auto cb = getBalance(ot.client_id);
-    if (ot.open_offset == OPEN && ot.long_short == LONG && ot.amount * ot.price > cb.available_balance)
+    if (ot.open_offset == OPEN && ot.long_short == LONG_ORDER && ot.amount * ot.price > cb.available_balance)
 		return false;
-    if (ot.open_offset == OPEN && ot.long_short == SHORT &&
+    if (ot.open_offset == OPEN && ot.long_short == SHORT_ORDER &&
 		ot.amount * calc_server->Price_Qoute(ot.instr_code.toStdString()) / getMultiplier(ot.instr_code.toStdString()) - ot.amount *ot.price > cb.available_balance)
 		return false;
 	return true;
@@ -964,10 +964,10 @@ bool TradeManager::isOrderValid(const OrderType &ot) {
     if (ot.open_offset == OFFSET && ot.amount > pt.available_amount)
         return false;
     auto cb = getBalance(ot.client_id);
-    if (ot.open_offset == OPEN && ot.long_short == LONG && ot.amount * ot.price*multiplier > getAvailableBalance(ot.client_id))
+    if (ot.open_offset == OPEN && ot.long_short == LONG_ORDER && ot.amount * ot.price*multiplier > getAvailableBalance(ot.client_id))
         return false;
-    if (ot.open_offset == OPEN && ot.long_short == SHORT &&
-        ot.amount * calc_server->Price_Qoute(ot.instr_code.toStdString()) / getMultiplier(ot.instr_code.toStdString()) - ot.amount *ot.price*multiplier > getAvailableBalance(ot.client_id))
+    if (ot.open_offset == OPEN && ot.long_short == SHORT_ORDER &&
+        ot.amount * calc_server->Price_Qoute(ot.instr_code.toStdString()) / getMultiplier(ot.instr_code.toStdString())> getAvailableBalance(ot.client_id))
         return false;
     return true;
 
@@ -1006,13 +1006,13 @@ double TradeManager::getMarketValueBalance(int client_id) {
 inline
 double TradeManager::getCloseCashFlow(const PositionType &pt) {
     auto close_price = calc_server->Position_Quote(pt.instr_code.toStdString(), pt.long_short);
-    return (pt.long_short==LONG?1:-1) * close_price * pt.total_amount * calc_server->main_contract.multiplier;
+    return (pt.long_short==LONG_ORDER?1:-1) * close_price * pt.total_amount * calc_server->main_contract.multiplier;
 }
 
 inline
 double TradeManager::getCloseCashFlow(const TransactionType &tt) {
     //auto close_price = calc_server->Position_Quote(ot.instr_code.toStdString(), ot.getPositionDirect());
-    return (tt.getPositionDirect()==LONG?1:-1) * tt.price * tt.amount * calc_server->main_contract.multiplier;
+    return (tt.getPositionDirect()==LONG_ORDER?1:-1) * tt.price * tt.amount * calc_server->main_contract.multiplier;
 }
 
 inline
@@ -1168,7 +1168,7 @@ void TradeManager::resetClientBalance(int client_id) {
 inline
 double TradeManager::getTransactionPremium(const TransactionType &tt) {
     /*多方支付权力金，空方收取权利金*/
-    return (tt.long_short == LONG ? -1:1) * tt.price * tt.amount * calc_server->getMultiplier(tt.instr_code.toStdString());
+    return (tt.long_short == LONG_ORDER ? -1:1) * tt.price * tt.amount * calc_server->getMultiplier(tt.instr_code.toStdString());
 }
 
 inline
@@ -1176,7 +1176,7 @@ double TradeManager::getTransactionMargin(const TransactionType &tt) {
     return 0;
 }
 
-void TradeManager::SettleProgram()
+void TradeManager::settleProgram()
 {
     //Get All Users List
     int num=13;

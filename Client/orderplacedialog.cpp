@@ -22,7 +22,7 @@ orderPlaceDialog::orderPlaceDialog(ClientServiceClient *csc, QouteTrans *qt, boo
     ui->quantSpinBox->setMaximum(ui->longRadioButton->isChecked()?ask_volume:bid_volume);
     ui->quantSpinBox->setMinimum(1);
     if (is_close) {
-        if (ls == LONG) {
+        if (ls == LONG_ORDER) {
             ui->longRadioButton->setVisible(false);
             ui->shortRadioButton->setChecked(true);
             ui->shortRadioButton->setDisabled(true);
@@ -53,7 +53,7 @@ void orderPlaceDialog::onAccepted() {
     ot.price = ui->priceDoubleSpinBox->value();
     ot.amount = ui->quantSpinBox->value();
     ot.open_offset = ui->openRadioButton->isChecked()?OPEN : OFFSET;
-    ot.long_short = ui->longRadioButton->isChecked()?LONG : SHORT;
+    ot.long_short = ui->longRadioButton->isChecked()?LONG_ORDER : SHORT_ORDER;
     rpc->place_order(ot);
     emit orderPlaced();
 }

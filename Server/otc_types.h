@@ -20,8 +20,8 @@
 
 
 enum LongShortType {
-  LONG = 0,
-  SHORT = 1
+  LONG_ORDER = 0,
+  SHORT_ORDER = 1
 };
 
 extern const std::map<int, const char*> _LongShortType_VALUES_TO_NAMES;
