@@ -1248,9 +1248,9 @@ void TradeManager::SettleProgram()
     //Settle for Each Client
     for (int i=1;i<=num;i++)
     {
-        stringstream ss;
-        ss<<i;
-        string client_id=ss.str();
+        stringstream ssid;
+        ssid<<i;
+        string client_id=ssid.str();
         string settlefile="/home/jiangfeng/OTC_FILE/Settle_Files/ClientNo_"+client_id+"_"+date.toString("yyyy-MM-dd").toStdString()+".txt";
         ofstream outfile(settlefile.c_str());
         ClientInfo ClientInfo;
@@ -1309,7 +1309,7 @@ void TradeManager::SettleProgram()
           {
               new_margin=(settle_price+settle_underlying*margin_rate)*multiplier*i.total_amount;
               New_Margin+=new_margin;
-              ss.clear();
+              stringstream ss;
               ss<<new_margin;
               setDB_position(stoi(client_id),i.instr_code.toStdString(),"occupied_margin",ss.str());
           }
@@ -1357,7 +1357,7 @@ void TradeManager::SettleProgram()
     outfile<<setw(20)<<setfill(' ')<<"Cash WithDraw"<<setw(20)<<setfill(' ')<<"Frozen Margin"<<endl;
 
     outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<Balance.total_balance<<setw(25)<<setfill(' ')<<Balance.available_balance<<setw(25)<<setfill(' ')<<Balance.total_balance+Close_Value;
+    outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<setprecision(2)<<setiosflags(ios_base::fixed)<<Balance.total_balance<<setw(25)<<setfill(' ')<<setprecision(2)<<Balance.available_balance<<setw(25)<<setfill(' ')<<Balance.total_balance+Close_Value;
     outfile<<setw(25)<<setfill(' ')<<Balance.withdrawable_balance<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
     outfile<<endl;
 
