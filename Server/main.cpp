@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    //tm->settleProgram();
     MainWindow w(tm);
     w.show();
 

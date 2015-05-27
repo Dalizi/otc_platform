@@ -22,8 +22,8 @@ TradeManager::TradeManager(QObject *parent) :calc_server(new Option_Value("Trade
 {
     openDB();
 	calcRun();
-    //int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
-    int iRet = redis.Connect("127.0.0.1", 6379);
+    int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
+    //int iRet = redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;
         ss << "Redis Error: " <<iRet;
@@ -1311,7 +1311,7 @@ void TradeManager::settleProgram()
               New_Margin+=new_margin;
               stringstream ss;
               ss<<new_margin;
-              setDB_position(stoi(client_id),i.instr_code.toStdString(),"occupied_margin",ss.str());
+              setDB_position(stoi(client_id),i.instr_code.toStdString(),i.long_short,"occupied_margin",ss.str());
           }
           outfile<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(20)<<setfill(' ')<<i.average_price;
           outfile<<setw(20)<<setfill(' ')<<i.total_amount<<setw(20)<<setfill(' ')<<i.available_amount<<setw(20)<<setfill(' ')<<new_margin<<setw(20)<<setfill(' ')<<settle_price<<endl;
@@ -1346,6 +1346,7 @@ void TradeManager::settleProgram()
     outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
     ClientBalance Balance;
     Balance=getBalance(stoi(client_id));
+    Balance.client_id=stoi(client_id);
     //Set Balance Occupied Margin
     Balance.occupied_margin=New_Margin;
     //Set Balance Available_Balance
@@ -1392,15 +1393,16 @@ void TradeManager::setDB_change(int client_id,string table,string key,string val
     return;
 }
 
-void TradeManager::setDB_position(int client_id,string instr_code,string key,string value)
+void TradeManager::setDB_position(int client_id,string instr_code,LongShortType ls,string key,string value)
 {
     QSqlQuery  query(db);
     stringstream ss;
-    ss<<"UPDATE position SET "<<key<<"=? WHERE id=? AND instr_code=?";
+    ss<<"UPDATE position SET "<<key<<"=? WHERE id=? AND instr_code=? AND long_short=?";
     query.prepare(QString::fromStdString(ss.str()));
     query.addBindValue(QString::fromStdString(value));
     query.addBindValue(client_id);
     query.addBindValue(QString::fromStdString(instr_code));
+    query.addBindValue(ls);
     if (!query.exec())
         qDebug() << "SET balance FAILED... " << query.lastQuery() << " " << query.lastError();
 

@@ -126,7 +126,7 @@ private:
 	void flushRedis();
 
     void setDB_change(int client_id,string table,string key,string value);
-    void setDB_position(int client_id,string instr_code,string key,string value);
+    void setDB_position(int client_id,string instr_code,LongShortType ls,string key,string value);
 
 private:
     QSqlDatabase db;
