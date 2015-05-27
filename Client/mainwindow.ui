@@ -221,7 +221,11 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QLineEdit" name="marketValueBalanceLineEdit"/>
+             <widget class="QLineEdit" name="marketValueBalanceLineEdit">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="totalBalanceLabel">
@@ -287,7 +291,11 @@
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QLineEdit" name="frozenBalanceLineEdit"/>
+             <widget class="QLineEdit" name="frozenBalanceLineEdit">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
