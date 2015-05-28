@@ -174,7 +174,7 @@ void MainWindow::updateBalance() {
     ui->availableBalanceLineEdit->setText(QString::number(balance_map["available_balance"], 'f'));
     ui->frozenBalanceLineEdit->setText(QString::number(balance_map["frozen_balance"], 'f'));
     //ui->totalBalanceLineEdit->setText(QString::number(cbt.total_balance, 'f'));
-    ui->marginRiskLineEdit->setText(QString::number(balance_map["margin_risk"], 'f'));
+    ui->marginRiskLineEdit->setText(QString::number(balance_map["margin_risk_ratio"], 'f'));
     //ui->marketValueLineEdit->setText(QString::number(balance_map["market_value"], 'f'));
 
 }

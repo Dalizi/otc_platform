@@ -4,6 +4,10 @@
 
 using namespace std;
 
+extern string REDIS_ADDR;
+extern int REDIS_PORT;
+extern string REDIS_PASSWD;
+
 Option_Value::Option_Value(string infile_location, TradeManager *tm) : tm(tm)
 {
     ifstream in_file(infile_location);
@@ -19,8 +23,7 @@ Option_Value::Option_Value(string infile_location, TradeManager *tm) : tm(tm)
     }
 
 
-    string host("10.2.6.31");
-    int iRet = my_redis.Connect(host, 6379, "Finders6");
+    int iRet = my_redis.Connect(REDIS_ADDR, REDIS_PORT, REDIS_PASSWD);
     //int iRet = my_redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;
@@ -282,10 +285,7 @@ int Option_Value::Hedger_Excute(int net_delta,double price)
 
 		}
 
-	}
-	
-	TradeManager temp_class;
-	temp_class.setMainPosition(Total_Position[i]);
+    }
 	
 	cout << "Delta Hedged at: " << excute_price << " with amount " << net_delta << endl;
 
@@ -357,14 +357,14 @@ double Option_Value::Position_PnL(PositionType Position, bool isMain)
 
 			temp_param.Strike_Price = strike;
 			temp_param.TimeToMaturity = maturity;
-			double spread = Basis_Spread(temp_param.other_param);
-			if (isMain) {
+            double spread = Basis_Spread(temp_param.other_param);
+            if (isMain) {
                 spread *= (Position.long_short == LONG_ORDER ? 1 : -1);
-			}
-			else {
+            }
+            else {
                 spread *= (Position.long_short == LONG_ORDER ? -1 : 1);
-			}
-			temp_param.Volatility = spread/3 + Volatility_Adjustment(basic_vola, maturity, strike);
+            }
+            temp_param.Volatility = spread/3 + Volatility_Adjustment(basic_vola, maturity, strike);
 
 			switch (temp_param.Value_Method)
 			{

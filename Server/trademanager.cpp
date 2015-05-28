@@ -15,14 +15,18 @@
 
 #include "valuation_class.h"
 
+extern string REDIS_ADDR;
+extern int REDIS_PORT;
+extern string REDIS_PASSWD;
+
 
 using namespace std;
 
 TradeManager::TradeManager(QObject *parent) :calc_server(new Option_Value("TradeDate.txt", this))
 {
     openDB();
-	calcRun();
-    int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
+    calcRun();
+    int iRet = redis.Connect(REDIS_ADDR, REDIS_PORT, REDIS_PASSWD);
     //int iRet = redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;
@@ -34,52 +38,52 @@ TradeManager::TradeManager(QObject *parent) :calc_server(new Option_Value("Trade
 }
 
 TradeManager::~TradeManager() {
-	delete calc_server;
+    delete calc_server;
 }
 
 void TradeManager::loadContractTypeFile(const string &in_file) {
-	ifstream f(in_file);
-	if (f.fail()) {
-		errMsgBox("Fail loading contract type file.");
-	}
-	string line;
-	while (getline(f, line)) {
-		string type;
-		string code;
-		stringstream ss(line);
-		ss >> code;
-		ss >> type;
-		instr_code_type[code] = type;
-	}
+    ifstream f(in_file);
+    if (f.fail()) {
+        errMsgBox("Fail loading contract type file.");
+    }
+    string line;
+    while (getline(f, line)) {
+        string type;
+        string code;
+        stringstream ss(line);
+        ss >> code;
+        ss >> type;
+        instr_code_type[code] = type;
+    }
 
 }
 
 void TradeManager::calcRun() {
 
-	calc_server->Init();
-	PositionType temp_position;
-	temp_position.average_price = 200;
-	temp_position.client_id = 1;
-	temp_position.instr_code = "OTC-IFX03C00-2015-06-03-3500";
-	temp_position.total_amount = 10;
+    calc_server->Init();
+    PositionType temp_position;
+    temp_position.average_price = 200;
+    temp_position.client_id = 1;
+    temp_position.instr_code = "OTC-IFX03C00-2015-06-03-3500";
+    temp_position.total_amount = 10;
     temp_position.long_short = LONG_ORDER;
-	calc_server->Total_Position.push_back(temp_position);
+    calc_server->Total_Position.push_back(temp_position);
 
-	temp_position.average_price = 120;
-	temp_position.client_id = 1;
-	temp_position.instr_code = "OTC-IFX03P00-2015-06-05-3450";
-	temp_position.total_amount = 5;
+    temp_position.average_price = 120;
+    temp_position.client_id = 1;
+    temp_position.instr_code = "OTC-IFX03P00-2015-06-05-3450";
+    temp_position.total_amount = 5;
     temp_position.long_short = LONG_ORDER;
-	calc_server->Total_Position.push_back(temp_position);
+    calc_server->Total_Position.push_back(temp_position);
 
-	temp_position.average_price = 240;
-	temp_position.client_id = 1;
-	temp_position.instr_code = "OTC-IFX03C00-2015-06-011-3570";
-	temp_position.total_amount = 13;
+    temp_position.average_price = 240;
+    temp_position.client_id = 1;
+    temp_position.instr_code = "OTC-IFX03C00-2015-06-011-3570";
+    temp_position.total_amount = 13;
     temp_position.long_short = SHORT_ORDER;
-	calc_server->Total_Position.push_back(temp_position);
+    calc_server->Total_Position.push_back(temp_position);
 
-	calc_server->Start();
+    calc_server->Start();
 }
 
 inline
@@ -109,43 +113,43 @@ void TradeManager::addPosition(const PositionType &pt) {
 }
 
 void TradeManager::addMainPosition(const PositionType &pt) {
-	QSqlQuery query(db);
-	query.prepare("INSERT INTO total_position (long_short, instr_code, "
-		"total_amount, available_amount, frozen_amount,"
-		" average_price)"
-		"VALUES (?, ?, ?, ?, ?, ?)");
-	query.addBindValue(pt.long_short);
-	query.addBindValue(pt.instr_code);
-	query.addBindValue(pt.total_amount);
-	query.addBindValue(pt.available_amount);
-	query.addBindValue(pt.frozen_amount);
-	query.addBindValue(pt.average_price);
-	if (!query.exec()){
-		qDebug() << "addMainPosition FAILED..." << " " << query.lastQuery() << " " << query.lastError();
-	}
+    QSqlQuery query(db);
+    query.prepare("INSERT INTO total_position (long_short, instr_code, "
+                  "total_amount, available_amount, frozen_amount,"
+                  " average_price)"
+                  "VALUES (?, ?, ?, ?, ?, ?)");
+    query.addBindValue(pt.long_short);
+    query.addBindValue(pt.instr_code);
+    query.addBindValue(pt.total_amount);
+    query.addBindValue(pt.available_amount);
+    query.addBindValue(pt.frozen_amount);
+    query.addBindValue(pt.average_price);
+    if (!query.exec()){
+        qDebug() << "addMainPosition FAILED..." << " " << query.lastQuery() << " " << query.lastError();
+    }
 
 }
 
 string TradeManager::addOrder(OrderType &ot) {
-	QSqlQuery query(db);
-	query.prepare("INSERT INTO orders (id, instr_code, client_id, price,"
-        "amount, long_short, open_offset, order_status)"
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    QSqlQuery query(db);
+    query.prepare("INSERT INTO orders (id, instr_code, client_id, price,"
+                  "amount, long_short, open_offset, order_status)"
+                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     stringstream ss;
     auto time = QDateTime::currentDateTime();
     ot.time = time;
     ss <<QDate::currentDate().toString("yyyyMMdd").toStdString() <<setfill('0') <<setw(8)<<getOrderIndex();
     query.addBindValue(QString::fromStdString(ss.str()));
-	query.addBindValue(ot.instr_code);
-	query.addBindValue(ot.client_id);
-	query.addBindValue(ot.price);
-	query.addBindValue(ot.amount);
-	query.addBindValue(ot.long_short);
-	query.addBindValue((int)ot.open_offset);
-	query.addBindValue((int)ot.order_status);
+    query.addBindValue(ot.instr_code);
+    query.addBindValue(ot.client_id);
+    query.addBindValue(ot.price);
+    query.addBindValue(ot.amount);
+    query.addBindValue(ot.long_short);
+    query.addBindValue((int)ot.open_offset);
+    query.addBindValue((int)ot.order_status);
     //query.addBindValue(time.toString("yyyy-MM-dd HH:mm:ss"));
-	if (!query.exec())
-		qDebug() << "addOrder FAILED..." << " " << query.lastQuery() << " " << query.lastError();
+    if (!query.exec())
+        qDebug() << "addOrder FAILED..." << " " << query.lastQuery() << " " << query.lastError();
     return ss.str();
 }
 
@@ -166,7 +170,7 @@ vector<TransactionType> TradeManager::getTransaction(int client_id) {
         ot.amount = query.value(5).toInt();
         ot.long_short = (LongShortType)query.value(6).toInt();
         ot.open_offset = (OpenOffsetType)query.value(7).toInt();
-		ot.underlying_price = query.value(8).toDouble();
+        ot.underlying_price = query.value(8).toDouble();
         ot.close_pnl = query.value("close_pnl").toDouble();
         ret.push_back(ot);
 
@@ -175,50 +179,50 @@ vector<TransactionType> TradeManager::getTransaction(int client_id) {
 }
 
 vector<OrderType> TradeManager::getOrder(int client_id) {
-	vector<OrderType> ret;
-	QSqlQuery query(db);
-	query.prepare("SELECT * FROM orders WHERE client_id=?");
-	query.addBindValue(client_id);
-	if (!query.exec())
-		qDebug() << "GET ORDER FAILED..." << " " << query.lastQuery() << " " << query.lastError();
-	while (query.next()) {
-		OrderType ot;
-		ot.order_id = query.value(0).toString();
-		ot.instr_code = query.value(1).toString();
-		ot.time = query.value(2).toDateTime();
-		ot.client_id = client_id;
-		ot.price = query.value(4).toDouble();
-		ot.amount = query.value(5).toInt();
+    vector<OrderType> ret;
+    QSqlQuery query(db);
+    query.prepare("SELECT * FROM orders WHERE client_id=?");
+    query.addBindValue(client_id);
+    if (!query.exec())
+        qDebug() << "GET ORDER FAILED..." << " " << query.lastQuery() << " " << query.lastError();
+    while (query.next()) {
+        OrderType ot;
+        ot.order_id = query.value(0).toString();
+        ot.instr_code = query.value(1).toString();
+        ot.time = query.value(2).toDateTime();
+        ot.client_id = client_id;
+        ot.price = query.value(4).toDouble();
+        ot.amount = query.value(5).toInt();
         ot.long_short = (LongShortType)query.value(6).toInt();
         ot.open_offset = (OpenOffsetType)query.value(7).toInt();
         ot.order_status = (OrderStatusType)query.value(8).toInt();
-		ret.push_back(ot);
+        ret.push_back(ot);
 
-	}
-	return ret;
+    }
+    return ret;
 }
 
 vector<OrderType> TradeManager::getAllOrders() {
-	vector<OrderType> ret;
-	QSqlQuery query(db);
-	query.prepare("SELECT * FROM orders");
-	if (!query.exec())
-		qDebug() << "GET ORDER FAILED..." << " " << query.lastQuery() << " " << query.lastError();
-	while (query.next()) {
-		OrderType ot;
-		ot.order_id = query.value(0).toString();
-		ot.instr_code = query.value(1).toString();
-		ot.time = query.value(2).toDateTime();
-		ot.client_id = query.value(3).toInt();
-		ot.price = query.value(4).toDouble();
-		ot.amount = query.value(5).toInt();
+    vector<OrderType> ret;
+    QSqlQuery query(db);
+    query.prepare("SELECT * FROM orders");
+    if (!query.exec())
+        qDebug() << "GET ORDER FAILED..." << " " << query.lastQuery() << " " << query.lastError();
+    while (query.next()) {
+        OrderType ot;
+        ot.order_id = query.value(0).toString();
+        ot.instr_code = query.value(1).toString();
+        ot.time = query.value(2).toDateTime();
+        ot.client_id = query.value(3).toInt();
+        ot.price = query.value(4).toDouble();
+        ot.amount = query.value(5).toInt();
         ot.long_short = (LongShortType)query.value(6).toInt();
         ot.open_offset = (OpenOffsetType)query.value(7).toInt();
         ot.order_status = (OrderStatusType)query.value(8).toInt();
-		ret.push_back(ot);
+        ret.push_back(ot);
 
-	}
-	return ret;
+    }
+    return ret;
 }
 
 void TradeManager::acceptOrder(const OrderType &ot) {
@@ -232,7 +236,7 @@ void TradeManager::acceptOrder(const OrderType &ot) {
     tt.price = ot.price;
     tt.underlying_price = calc_server->getUnderlyingPrice(ot.instr_code.toStdString());
     changeOrderStatus(ot.order_id.toStdString(), 1);
-    updateBalance(tt);
+    //updateBalance(tt);
     setPosition(tt);
 }
 
@@ -248,34 +252,34 @@ void TradeManager::cancelOrder(const OrderType &ot) {
 
 inline
 int TradeManager::getOrderStatus(const string &order_id) {
-	QSqlQuery query(db);
-	query.prepare("SELECT order_status FROM orders WHERE id=?");
-	query.addBindValue(QString::fromStdString(order_id));
-	if (!query.exec())
-		qDebug() << "changeOrderStatus FAILED..." << " " << query.lastQuery() << " " << query.lastError();
-	if (query.next())
-		return query.value(0).toInt();
-	else {
-		stringstream ss;
-		ss << "Order: " << order_id << " does not exist.";
-		errMsgBox(ss.str());
-	}
+    QSqlQuery query(db);
+    query.prepare("SELECT order_status FROM orders WHERE id=?");
+    query.addBindValue(QString::fromStdString(order_id));
+    if (!query.exec())
+        qDebug() << "changeOrderStatus FAILED..." << " " << query.lastQuery() << " " << query.lastError();
+    if (query.next())
+        return query.value(0).toInt();
+    else {
+        stringstream ss;
+        ss << "Order: " << order_id << " does not exist.";
+        errMsgBox(ss.str());
+    }
 }
 
 inline
 void TradeManager::changeOrderStatus(const string &order_id, int status) {
-	/*
-	* 0:已报
-	* 1:已成
-	* 2:未成
-	* 3:撤单
-	*/
-	QSqlQuery query(db);
-	query.prepare("UPDATE orders SET order_status=? WHERE id=?");
-	query.addBindValue(status);
-	query.addBindValue(QString::fromStdString(order_id));
-	if (!query.exec())
-		qDebug() << "changeOrderStatus FAILED..." << " " << query.lastQuery() << " " << query.lastError();
+    /*
+    * 0:已报
+    * 1:已成
+    * 2:未成
+    * 3:撤单
+    */
+    QSqlQuery query(db);
+    query.prepare("UPDATE orders SET order_status=? WHERE id=?");
+    query.addBindValue(status);
+    query.addBindValue(QString::fromStdString(order_id));
+    if (!query.exec())
+        qDebug() << "changeOrderStatus FAILED..." << " " << query.lastQuery() << " " << query.lastError();
 }
 
 PositionType TradeManager::getPosition(int client_id, const QString &instr_code, LongShortType long_short) {
@@ -356,49 +360,49 @@ ClientInfo TradeManager::getClientInfo(const QString &client_name) {
         qDebug() <<query.lastQuery() <<" FAILED..." <<" ERROR:" <<query.lastError();
     ClientInfo ci;
     if (query.next()) {
-       ci.client_id =  query.value(0).toInt();
-       ci.client_name = query.value(1).toString();
-       ci.interview_record = query.value(2).toString();
-       ci.review_material = query.value(3).toString();
-       ci.public_info = query.value(4).toString();
-       ci.client_relationship = query.value(5).toString();
-       ci.client_level = query.value(6).toInt();
-       ci.trust_value = query.value(7).toDouble();
-       ci.chartered_business = query.value(8).toString();
+        ci.client_id =  query.value(0).toInt();
+        ci.client_name = query.value(1).toString();
+        ci.interview_record = query.value(2).toString();
+        ci.review_material = query.value(3).toString();
+        ci.public_info = query.value(4).toString();
+        ci.client_relationship = query.value(5).toString();
+        ci.client_level = query.value(6).toInt();
+        ci.trust_value = query.value(7).toDouble();
+        ci.chartered_business = query.value(8).toString();
     }
     return ci;
 }
 
 ClientInfo TradeManager::getClientInfo(const int client_id) {
-	QSqlQuery query(db);
-	query.prepare("SELECT * FROM client WHERE id = ?");
-	query.addBindValue(client_id);
-	if (!query.exec())
-		qDebug() << query.lastQuery() << " FAILED..." << " ERROR:" << query.lastError();
-	ClientInfo ci;
-	if (query.next()) {
-		ci.client_id = query.value(0).toInt();
-		ci.client_name = query.value(1).toString();
-		ci.interview_record = query.value(2).toString();
-		ci.review_material = query.value(3).toString();
-		ci.public_info = query.value(4).toString();
-		ci.client_relationship = query.value(5).toString();
-		ci.client_level = query.value(6).toInt();
-		ci.trust_value = query.value(7).toDouble();
-		ci.chartered_business = query.value(8).toString();
-	}
-	return ci;
+    QSqlQuery query(db);
+    query.prepare("SELECT * FROM client WHERE id = ?");
+    query.addBindValue(client_id);
+    if (!query.exec())
+        qDebug() << query.lastQuery() << " FAILED..." << " ERROR:" << query.lastError();
+    ClientInfo ci;
+    if (query.next()) {
+        ci.client_id = query.value(0).toInt();
+        ci.client_name = query.value(1).toString();
+        ci.interview_record = query.value(2).toString();
+        ci.review_material = query.value(3).toString();
+        ci.public_info = query.value(4).toString();
+        ci.client_relationship = query.value(5).toString();
+        ci.client_level = query.value(6).toInt();
+        ci.trust_value = query.value(7).toDouble();
+        ci.chartered_business = query.value(8).toString();
+    }
+    return ci;
 }
 
 ClientBalance TradeManager::getClientBalance(int client_id) {
     QSqlQuery query(QString("SELECT * FROM balance WHERE name = %1").arg(client_id),db);
     ClientBalance cb;
     if (query.next()) {
-       cb.client_id =  query.value(0).toInt();
-       cb.total_balance = query.value(1).toDouble();
-       cb.available_balance = query.value(2).toDouble();
-       cb.withdrawable_balance = query.value(3).toDouble();
-       cb.occupied_margin = query.value(4).toDouble();
+        cb.client_id =  query.value(0).toInt();
+        cb.total_balance = query.value(1).toDouble();
+        cb.available_balance = query.value(2).toDouble();
+        cb.withdrawable_balance = query.value(3).toDouble();
+        cb.occupied_margin = query.value(4).toDouble();
     } else {
         QMessageBox mb;
         mb.setStandardButtons(QMessageBox::Ok|QMessageBox::Cancel);
@@ -434,9 +438,8 @@ void TradeManager::setPosition(TransactionType tt) {
     else
         tt.close_pnl = 0;
     setTransaction(tt);
-	if (pt.instr_code == "") {
-        string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
-        int multiplier = calc_server->main_contract.multiplier;
+    if (pt.instr_code == "") {
+        double margin_change = updateBalance(pt, tt);
         pt.instr_code = tt.instr_code;
         pt.client_id = tt.client_id;
         pt.long_short = tt.long_short;
@@ -445,25 +448,24 @@ void TradeManager::setPosition(TransactionType tt) {
         pt.available_amount = tt.amount;
         pt.average_price = tt.price;
         pt.underlying_price = calc_server->getUnderlyingPrice(tt.instr_code.toStdString());
-        if (tt.long_short == SHORT_ORDER)
-            pt.occupied_margin = calc_server->Settle_Price(underlying_code, tt.long_short)
-                                * tt.amount*multiplier
-                                * getMarginRate(tt.client_id, tt.instr_code.toStdString()) + tt.amount*tt.price*multiplier;
-		addPosition(pt);
+        pt.occupied_margin += margin_change;
+        addPosition(pt);
+        updateMainBalance(tt);
 
     } else {
         updatePosition(pt, tt);
     }
+    emit transactionComplete();
 }
 
 void TradeManager::setPosition(const PositionType &pt) {
-	if (pt.total_amount == 0) {
-		deletePosition(pt);
-		return;
-	}
+    if (pt.total_amount == 0) {
+        deletePosition(pt);
+        return;
+    }
     QSqlQuery query(db);
     query.prepare("UPDATE position SET average_price=?, total_amount=?, available_amount=?, frozen_amount=?, underlying_price=?"
-                                "WHERE id=? AND instr_code=? AND long_short=?");
+                  "WHERE id=? AND instr_code=? AND long_short=?");
     query.addBindValue(pt.average_price);
     query.addBindValue(pt.total_amount);
     query.addBindValue(pt.available_amount);
@@ -477,38 +479,24 @@ void TradeManager::setPosition(const PositionType &pt) {
 }
 
 void TradeManager::deletePosition(const PositionType &pt) {
-	QSqlQuery query(db);
-	query.prepare("DELETE FROM position WHERE id=? AND instr_code=? AND long_short=?");
-	query.addBindValue(pt.client_id);
-	query.addBindValue(pt.instr_code);
-	query.addBindValue((int)pt.long_short);
-	if (!query.exec())
-		errMsgBox("删除持仓失败。");
+    QSqlQuery query(db);
+    query.prepare("DELETE FROM position WHERE id=? AND instr_code=? AND long_short=?");
+    query.addBindValue(pt.client_id);
+    query.addBindValue(pt.instr_code);
+    query.addBindValue((int)pt.long_short);
+    if (!query.exec())
+        errMsgBox("删除持仓失败。");
 }
 
-void TradeManager::setMainPosition(const PositionType &pt) {
-	QSqlQuery query(db);
-	query.prepare("UPDATE total_position SET average_price=?, total_amount=?, available_amount=?, frozen_amount=?"
-		"WHERE instr_code=? AND long_short=?");
-	query.addBindValue(pt.average_price);
-	query.addBindValue(pt.total_amount);
-	query.addBindValue(pt.available_amount);
-	query.addBindValue(pt.frozen_amount);
-	query.addBindValue(pt.instr_code);
-	query.addBindValue((int)pt.long_short);
-	if (!query.exec())
-		qDebug() << "UPDATE total_position FAILED..." << " " << query.lastQuery() << " " << query.lastError();
-
-}
 
 int TradeManager::setClientInfo(const ClientInfo &ci) {
     QSqlQuery query(db);
     query.prepare(QString("INSERT INTO client (name, interview_record, "
-                  "review_material, public_info, client_relationship,"
-                  " client_level, entrust_value, business_domain)"
-                  "VALUES (:name, :interview_record,"
-                  ":review_material, :public_info, :client_relationship,"
-                  ":client_level, :entrust_value, :business_domain)"));
+                          "review_material, public_info, client_relationship,"
+                          " client_level, entrust_value, business_domain)"
+                          "VALUES (:name, :interview_record,"
+                          ":review_material, :public_info, :client_relationship,"
+                          ":client_level, :entrust_value, :business_domain)"));
     query.bindValue(":name", ci.client_name);
     query.bindValue(":interview_record", ci.interview_record);
     query.bindValue(":review_material", ci.review_material);
@@ -519,49 +507,49 @@ int TradeManager::setClientInfo(const ClientInfo &ci) {
     query.bindValue(":business_domain", ci.chartered_business);
     if (!query.exec())
         qDebug() <<"INSERTION client FAILED... "<<query.lastQuery()  <<" " <<query.lastError();
-	query.prepare("SELECT id FROM client WHERE name=?");
-	query.addBindValue(ci.client_name);
-	if (!query.exec())
-		qDebug() << "get client id FAILED... " << query.lastQuery() << " " << query.lastError();
-	int client_id;
-	if (query.next()) {
-		client_id = query.value(0).toInt();
-	}
+    query.prepare("SELECT id FROM client WHERE name=?");
+    query.addBindValue(ci.client_name);
+    if (!query.exec())
+        qDebug() << "get client id FAILED... " << query.lastQuery() << " " << query.lastError();
+    int client_id;
+    if (query.next()) {
+        client_id = query.value(0).toInt();
+    }
 
-	query.prepare("INSERT INTO passwd (client_id, password)"
-		"VALUES (?, ?)");
-	query.addBindValue(client_id);
-	query.addBindValue("999999");
-	if (!query.exec())
-		qDebug() << "INSERTION passwd FAILED... " << query.lastQuery() << " " << query.lastError();
+    query.prepare("INSERT INTO passwd (client_id, password)"
+                  "VALUES (?, ?)");
+    query.addBindValue(client_id);
+    query.addBindValue("999999");
+    if (!query.exec())
+        qDebug() << "INSERTION passwd FAILED... " << query.lastQuery() << " " << query.lastError();
 
-	return client_id;
+    return client_id;
 
 }
 
 void TradeManager::initClientBalance(int client_id, double init_balance) {
-	QSqlQuery query(db);
-	query.prepare("INSERT INTO balance (id, total_balance, available_balance, occupied_margin, withdrawable_balance)"
-		"VALUES (?, ?, ?, ?, ?)");
-	query.addBindValue(client_id);
-	query.addBindValue(init_balance);
-	query.addBindValue(init_balance);
-	query.addBindValue(0);
-	query.addBindValue(init_balance);
-	if (!query.exec())
-		qDebug() << "INITIALIZING balance FAILED... " << query.lastQuery() << " " << query.lastError();
+    QSqlQuery query(db);
+    query.prepare("INSERT INTO balance (id, total_balance, available_balance, occupied_margin, withdrawable_balance)"
+                  "VALUES (?, ?, ?, ?, ?)");
+    query.addBindValue(client_id);
+    query.addBindValue(init_balance);
+    query.addBindValue(init_balance);
+    query.addBindValue(0);
+    query.addBindValue(init_balance);
+    if (!query.exec())
+        qDebug() << "INITIALIZING balance FAILED... " << query.lastQuery() << " " << query.lastError();
 }
 
 void TradeManager::setClientBalance(const ClientBalance &cb) {
-	QSqlQuery  query(db);
+    QSqlQuery  query(db);
     query.prepare("UPDATE balance SET total_balance=?, available_balance=?, withdrawable_balance=?, occupied_margin=?  WHERE id=?");
-	query.addBindValue(cb.total_balance);
-	query.addBindValue(cb.available_balance);
-	query.addBindValue(cb.withdrawable_balance);
-	query.addBindValue(cb.occupied_margin);
-	query.addBindValue(cb.client_id);
-	if (!query.exec())
-		qDebug() << "SET balance FAILED... " << query.lastQuery() << " " << query.lastError();
+    query.addBindValue(cb.total_balance);
+    query.addBindValue(cb.available_balance);
+    query.addBindValue(cb.withdrawable_balance);
+    query.addBindValue(cb.occupied_margin);
+    query.addBindValue(cb.client_id);
+    if (!query.exec())
+        qDebug() << "SET balance FAILED... " << query.lastQuery() << " " << query.lastError();
 
 
 }
@@ -578,28 +566,29 @@ std::vector<QString> TradeManager::getClientList() {
 }
 
 ClientBalance TradeManager::getBalance(int client_id) {
-	QSqlQuery  query(db);
-	ClientBalance cb;
-	query.prepare("SELECT total_balance, available_balance, withdrawable_balance, occupied_margin FROM balance WHERE id=?");
-	query.addBindValue(client_id);
-	if (!query.exec())
-		qDebug() << "GET balance FAILED... " << query.lastQuery() << " " << query.lastError();
-	if (query.next()) {
-		cb.total_balance = query.value(0).toDouble();
-		cb.available_balance = query.value(1).toDouble();
-		cb.withdrawable_balance = query.value(2).toDouble();
-		cb.occupied_margin = query.value(3).toDouble();
-	}
-	else {
-		QMessageBox qMsgBox;
-		qMsgBox.setText("No balance info");
-		qMsgBox.exec();
-	}
-	return cb;
+    QSqlQuery  query(db);
+    ClientBalance cb;
+    query.prepare("SELECT total_balance, available_balance, withdrawable_balance, occupied_margin FROM balance WHERE id=?");
+    query.addBindValue(client_id);
+    if (!query.exec())
+        qDebug() << "GET balance FAILED... " << query.lastQuery() << " " << query.lastError();
+    if (query.next()) {
+        cb.client_id = client_id;
+        cb.total_balance = query.value(0).toDouble();
+        cb.available_balance = query.value(1).toDouble();
+        cb.withdrawable_balance = query.value(2).toDouble();
+        cb.occupied_margin = query.value(3).toDouble();
+    }
+    else {
+        QMessageBox qMsgBox;
+        qMsgBox.setText("No balance info");
+        qMsgBox.exec();
+    }
+    return cb;
 }
 
 double TradeManager::getTotalBalance(int client_id) {
-	return 0;
+    return 0;
 }
 
 
@@ -632,87 +621,94 @@ bool TradeManager::openDB()
 
     // Open databasee
     bool ret = db.open();
-	QSqlQuery query(db);
+    QSqlQuery query(db);
     query.prepare("CREATE table if not exists client ("
-                    "id integer PRIMARY KEY AUTOINCREMENT,"
-                    "name varchar(128),"
-                    "interview_record varchar(2048),"
-                    "review_material varchar(2048),"
-                    "public_info varchar(2048),"
-                    "client_relationship varchar(2048),"
-                    "client_level integer,"
-                    "entrust_value double,"
-                    "business_domain varcha(2048)"
-                    ");");
+                  "id integer PRIMARY KEY AUTOINCREMENT,"
+                  "name varchar(128),"
+                  "interview_record varchar(2048),"
+                  "review_material varchar(2048),"
+                  "public_info varchar(2048),"
+                  "client_relationship varchar(2048),"
+                  "client_level integer,"
+                  "entrust_value double,"
+                  "business_domain varcha(2048)"
+                  ");");
     if (!query.exec())
-		qDebug() << "CREATE client table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+        qDebug() << "CREATE client table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 
     query.prepare("CREATE table if not exists balance ("
-                    "id integer PRIMARY KEY,"
-                    "total_balance double,"
-                    "available_balance double,"
-                    "withdrawable_balance double,"
-					"occupied_margin double"
-                    ");");
+                  "id integer PRIMARY KEY,"
+                  "total_balance double,"
+                  "available_balance double,"
+                  "withdrawable_balance double,"
+                  "occupied_margin double"
+                  ");");
     if (!query.exec())
-		qDebug() << "CREATE balance table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+        qDebug() << "CREATE balance table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 
     query.prepare("CREATE table if not exists transactions ("
-                    "id varchar(33),"
-                    "instr_code varchar(20),"
-					"time timestamp NOT NULL DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')),"
-                    "client_id integer,"
-                    "price double,"
-                    "amount integer,"
-                    "long_short integer,"
-                    "open_offset integer,"
-                    "underlying_price double,"
-                    "close_pnl double"
-                    ");");
-	if (!query.exec())
-		qDebug() << "CREATE transaction table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+                  "id varchar(33),"
+                  "instr_code varchar(20),"
+                  "time timestamp NOT NULL DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')),"
+                  "client_id integer,"
+                  "price double,"
+                  "amount integer,"
+                  "long_short integer,"
+                  "open_offset integer,"
+                  "underlying_price double,"
+                  "close_pnl double"
+                  ");");
+    if (!query.exec())
+        qDebug() << "CREATE transaction table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 
-	query.prepare("CREATE table if not exists orders ("
-		"id varchar(33),"
-		"instr_code varchar(20),"
-		"time timestamp NOT NULL DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')),"
-		"client_id integer,"
-		"price double,"
-		"amount integer,"
-		"long_short integer,"
-		"open_offset integer,"
-		"order_status integer"
-		");");
-	if (!query.exec())
-		qDebug() << "CREATE transaction table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+    query.prepare("CREATE table if not exists orders ("
+                  "id varchar(33),"
+                  "instr_code varchar(20),"
+                  "time timestamp NOT NULL DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')),"
+                  "client_id integer,"
+                  "price double,"
+                  "amount integer,"
+                  "long_short integer,"
+                  "open_offset integer,"
+                  "order_status integer"
+                  ");");
+    if (!query.exec())
+        qDebug() << "CREATE transaction table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 
     query.prepare("CREATE table if not exists position ("
-                    "id integer,"
-                    "instr_code varchar(20),"
-                    "average_price double,"
-                    "total_amount integer,"
-                    "available_amount integer,"
-                    "frozen_amount integer,"
-                    "long_short integer,"
-                    "occupied_margin double"
-                    ");");
+                  "id integer,"
+                  "instr_code varchar(20),"
+                  "average_price double,"
+                  "total_amount integer,"
+                  "available_amount integer,"
+                  "frozen_amount integer,"
+                  "long_short integer,"
+                  "occupied_margin double"
+                  ");");
     if (!query.exec())
         qDebug() << "CREATE position table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 
-	query.prepare("CREATE table if not exists passwd ("
-		"client_id integer,"
-		"password varchar(20) NOT NULL DEFAULT '999999'"
-		");");
-	if (!query.exec())
-		qDebug() << "CREATE passwd table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+    query.prepare("CREATE table if not exists passwd ("
+                  "client_id integer,"
+                  "password varchar(20) NOT NULL DEFAULT '999999'"
+                  ");");
+    if (!query.exec())
+        qDebug() << "CREATE passwd table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 
-	query.prepare("CREATE table if not exists margin_rate ("
-		"client_id integer,"
-		"instr_code varchar(30),"
-		"margin_rate double"
-		");");
-	if (!query.exec())
-		errMsgBox("CREATE margin_rate table FAILED...");
+    query.prepare("CREATE table if not exists main_balance ("
+                  "balance double"
+                  ");");
+    if (!query.exec())
+        errMsgBox("CREATE margin_rate table FAILED...");
+
+
+    query.prepare("CREATE table if not exists margin_rate ("
+                  "client_id integer,"
+                  "instr_code varchar(30),"
+                  "margin_rate double"
+                  ");");
+    if (!query.exec())
+        errMsgBox("CREATE margin_rate table FAILED...");
     return ret;
 }
 
@@ -739,30 +735,30 @@ bool TradeManager::isPositionExist(int client_id, const QString &instr_code, int
 }
 
 double TradeManager::getPnL(const PositionType &pt, bool isMain) {
-	return calc_server->Position_PnL(pt, isMain);
+    return calc_server->Position_PnL(pt, isMain);
 }
 
 vector<Qoute> TradeManager::getQoute() {
-	vector<Qoute> ret;
-	vector<string> keys;
-	redis.Keys("OTC-*", keys);
-	for (auto key : keys) {
-		Qoute q;
-		map<string, string> qoute_map;
-		redis.HGetAll(key, qoute_map);
-		if (qoute_map.find("code") == qoute_map.end() || qoute_map.find("ask") == qoute_map.end() ||
-			qoute_map.find("ask_volume") == qoute_map.end() || qoute_map.find("bid") == qoute_map.end()
-			|| qoute_map.find("bid_volume") == qoute_map.end()) continue;
+    vector<Qoute> ret;
+    vector<string> keys;
+    redis.Keys("OTC-*", keys);
+    for (auto key : keys) {
+        Qoute q;
+        map<string, string> qoute_map;
+        redis.HGetAll(key, qoute_map);
+        if (qoute_map.find("code") == qoute_map.end() || qoute_map.find("ask") == qoute_map.end() ||
+                qoute_map.find("ask_volume") == qoute_map.end() || qoute_map.find("bid") == qoute_map.end()
+                || qoute_map.find("bid_volume") == qoute_map.end()) continue;
 
-		q.instr_code = QString::fromStdString(qoute_map["code"]);
-		q.ask_price = stod(qoute_map["ask"]);
-		q.ask_volume = stoi(qoute_map["ask_volume"]);
-		q.bid_price = stod(qoute_map["bid"]);
-		q.bid_volume = stoi(qoute_map["bid_volume"]);
-		ret.push_back(q);
-		
-	}
-	return ret;
+        q.instr_code = QString::fromStdString(qoute_map["code"]);
+        q.ask_price = stod(qoute_map["ask"]);
+        q.ask_volume = stoi(qoute_map["ask_volume"]);
+        q.bid_price = stod(qoute_map["bid"]);
+        q.bid_volume = stoi(qoute_map["bid_volume"]);
+        ret.push_back(q);
+
+    }
+    return ret;
 }
 
 vector<PositionType> TradeManager::getAllMainAccountPosition() {
@@ -793,11 +789,10 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
     QSqlQuery query(db);
     int adjust_param = tt.open_offset == OpenOffsetType::OPEN ? 1 : -1;
     int total_amount = pt.total_amount + tt.amount * adjust_param;
-    string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
-    int multiplier = calc_server->main_contract.multiplier;
-
-
+    double occupied_margin = pt.occupied_margin;
     double average_price, underlying_price;
+    occupied_margin += updateBalance(pt, tt);
+    updateMainBalance(tt);
     if (total_amount != 0) {
         if (tt.open_offset == OPEN) {
             average_price = (pt.average_price * pt.total_amount + tt.price * tt.amount)/ (pt.total_amount + tt.amount);
@@ -807,17 +802,13 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
             underlying_price = pt.underlying_price;
         }
 
-        double occupied_margin = calc_server->Settle_Price(underlying_code, tt.long_short)
-                            * tt.amount*multiplier
-                            * getMarginRate(tt.client_id, tt.instr_code.toStdString()) + pt.average_price * tt.amount;
-        double margin_chng = pt.occupied_margin + (pt.long_short==LONG_ORDER?0:((tt.open_offset==OPEN?1:-1)*occupied_margin));
         query.prepare("UPDATE position SET total_amount=?, available_amount=?,average_price=?, underlying_price=?, occupied_margin=?"
                       "WHERE instr_code=? AND id=? AND long_short=?");
         query.addBindValue(total_amount);
         query.addBindValue(total_amount);
         query.addBindValue(average_price);
         query.addBindValue(underlying_price);
-        query.addBindValue(margin_chng);
+        query.addBindValue(occupied_margin);
         query.addBindValue(pt.instr_code);
         query.addBindValue(pt.client_id);
         query.addBindValue(static_cast<int>(pt.long_short));
@@ -830,10 +821,40 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
 
     if (!query.exec())
         qDebug() << "Update position FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+
+
+}
+
+double TradeManager::updateBalance(const PositionType &pt, const TransactionType &tt) {
+    double margin_chng = 0;
+    string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
+    int multiplier = calc_server->main_contract.multiplier;
+    double premium = tt.price * tt.amount * multiplier;
+    if (pt.long_short == SHORT_ORDER) {
+        if (tt.open_offset == OPEN)
+            margin_chng = calc_server->Settle_Price(underlying_code, tt.long_short)
+                    * tt.amount*multiplier
+                    * getMarginRate(tt.client_id, tt.instr_code.toStdString()) + premium;
+        else
+            margin_chng = -pt.occupied_margin * tt.amount / pt.total_amount;
+    }
+    double cash_flow = premium * (tt.long_short == LONG_ORDER?-1:1);
+    QSqlQuery query(db);
+    query.prepare("UPDATE balance SET total_balance=total_balance+?,"
+                  "occupied_margin=occupied_margin+?,"
+                  "withdrawable_balance=?"
+                  "WHERE id=?");
+    query.addBindValue(cash_flow);
+    query.addBindValue(margin_chng);
+    query.addBindValue(getAvailableBalance(tt.client_id));
+    query.addBindValue(tt.client_id);
+    if (!query.exec())
+        QMessageBox::warning(0, "Warning", "更新客户资金失败。");
+    return margin_chng;
 }
 
 void TradeManager::updateBalance(const TransactionType &tt) {
-	QSqlQuery query(db);
+    QSqlQuery query(db);
     string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
     int multiplier = calc_server->main_contract.multiplier;
     query.prepare("UPDATE balance SET total_balance =total_balance+?,"
@@ -849,8 +870,8 @@ void TradeManager::updateBalance(const TransactionType &tt) {
                 query.addBindValue(0);
                 query.addBindValue(-premium);
                 query.addBindValue(tt.client_id);
-			}
-			else {
+            }
+            else {
                 double premium = pt.average_price*tt.amount*multiplier;
                 double cash_flow = getCloseCashFlow(tt);
                 double margin = calc_server->Settle_Price(underlying_code, tt.long_short)*tt.amount*multiplier*getMarginRate(tt.client_id, tt.instr_code.toStdString());
@@ -858,8 +879,8 @@ void TradeManager::updateBalance(const TransactionType &tt) {
                 query.addBindValue(-premium-margin);
                 query.addBindValue(margin);
                 query.addBindValue(tt.client_id);
-			}
-		} else {
+            }
+        } else {
             if (tt.open_offset == OpenOffsetType::OPEN) {
                 double premium = tt.price*tt.amount*multiplier;
                 double margin = calc_server->Settle_Price(underlying_code, tt.long_short)*tt.amount*multiplier*getMarginRate(tt.client_id, tt.instr_code.toStdString());
@@ -867,45 +888,45 @@ void TradeManager::updateBalance(const TransactionType &tt) {
                 query.addBindValue(premium+margin);
                 query.addBindValue(-margin);
                 query.addBindValue(tt.client_id);
-			}
-			else {
+            }
+            else {
                 auto pos = getPosition(tt.client_id, tt.instr_code, tt.reversePosition());
                 double cash_flow = getCloseCashFlow(tt);
                 query.addBindValue(cash_flow);
                 query.addBindValue(0);
                 query.addBindValue(0);
                 query.addBindValue(tt.client_id);
-			}
-		}
-	}
-	if (!query.exec())
-		qDebug() << "Update balance FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+            }
+        }
+    }
+    if (!query.exec())
+        qDebug() << "Update balance FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 }
 
 void TradeManager::updateBalance(int client_id, double adjust_value) {
-	QSqlQuery query(db);
+    QSqlQuery query(db);
 
-	query.prepare("UPDATE balance SET available_balance=available_balance+?, withdrawable_balance=available_balance, frozen_balance=frozen_balance+? WHERE id=?");
-	query.addBindValue(adjust_value);
-	query.addBindValue(adjust_value);
-	query.addBindValue(adjust_value);
-	query.addBindValue(client_id);
-	if (!query.exec())
-		qDebug() << "Update balance FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+    query.prepare("UPDATE balance SET available_balance=available_balance+?, withdrawable_balance=available_balance, frozen_balance=frozen_balance+? WHERE id=?");
+    query.addBindValue(adjust_value);
+    query.addBindValue(adjust_value);
+    query.addBindValue(adjust_value);
+    query.addBindValue(client_id);
+    if (!query.exec())
+        qDebug() << "Update balance FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 }
 
 
 int TradeManager::authPassword(int client_id, const string &passwd) {
-	QSqlQuery query(db);
-	query.prepare("SELECT password FROM passwd WHERE client_id=?");
-	query.addBindValue(client_id);
-	if (!query.exec())
-		qDebug() << "GET password FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
-	if (query.next()) {
-		auto password = query.value(0).toString().toStdString();
-		return password == passwd;
-	}
-	return -1;
+    QSqlQuery query(db);
+    query.prepare("SELECT password FROM passwd WHERE client_id=?");
+    query.addBindValue(client_id);
+    if (!query.exec())
+        qDebug() << "GET password FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
+    if (query.next()) {
+        auto password = query.value(0).toString().toStdString();
+        return password == passwd;
+    }
+    return -1;
 }
 
 int TradeManager::getOrderIndex() {
@@ -928,46 +949,49 @@ void TradeManager::processSingleOrder(const OrderType &ot) {
 }
 
 bool TradeManager::isOrderValid(const string &order_id) {
-	QSqlQuery query(db);
-	query.prepare("SELECT client_id, instr_code, open_offset, long_short, amount, price FROM orders WHERE id=?");
-	query.addBindValue(QString::fromStdString(order_id));
-	if (!query.exec()) {
-		stringstream ss;
-		ss << "Fail reading order info" << query.lastError().text().toStdString();
-		errMsgBox(ss.str());
-	}
-	OrderType ot;
-	if (query.next()) {
-		ot.client_id = query.value(0).toInt();
-		ot.instr_code = query.value(1).toString();
+    QSqlQuery query(db);
+    query.prepare("SELECT client_id, instr_code, open_offset, long_short, amount, price FROM orders WHERE id=?");
+    query.addBindValue(QString::fromStdString(order_id));
+    if (!query.exec()) {
+        stringstream ss;
+        ss << "Fail reading order info" << query.lastError().text().toStdString();
+        errMsgBox(ss.str());
+    }
+    OrderType ot;
+    if (query.next()) {
+        ot.client_id = query.value(0).toInt();
+        ot.instr_code = query.value(1).toString();
         ot.open_offset = (OpenOffsetType)query.value(2).toInt();
         ot.long_short = (LongShortType)query.value(3).toInt();
-		ot.amount = query.value(4).toInt();
-		ot.price = query.value(5).toDouble();
-	}
+        ot.amount = query.value(4).toInt();
+        ot.price = query.value(5).toDouble();
+    }
     auto pt = getPosition(ot.client_id, ot.instr_code, ot.getPositionDirect());
     if (ot.open_offset == OFFSET && ot.amount > pt.available_amount)
-		return false;
-	auto cb = getBalance(ot.client_id);
+        return false;
+    auto cb = getBalance(ot.client_id);
     if (ot.open_offset == OPEN && ot.long_short == LONG_ORDER && ot.amount * ot.price > cb.available_balance)
-		return false;
+        return false;
     if (ot.open_offset == OPEN && ot.long_short == SHORT_ORDER &&
-		ot.amount * calc_server->Price_Qoute(ot.instr_code.toStdString()) / getMultiplier(ot.instr_code.toStdString()) - ot.amount *ot.price > cb.available_balance)
-		return false;
-	return true;
+            ot.amount * calc_server->Price_Qoute(ot.instr_code.toStdString()) / getMultiplier(ot.instr_code.toStdString()) - ot.amount *ot.price > cb.available_balance)
+        return false;
+    return true;
 
 }
 
 bool TradeManager::isOrderValid(const OrderType &ot) {
     auto multiplier = calc_server->main_contract.multiplier;
     auto pt = getPosition(ot.client_id, ot.instr_code, ot.getPositionDirect());
+    string underlying_code = calc_server->getUnderlyingCode(ot.instr_code.toStdString());
+    auto underlying_margin = ot.amount * calc_server->Settle_Price(underlying_code, ot.getPositionDirect())
+            * getMarginRate(ot.client_id, ot.instr_code.toStdString()) * multiplier;
+    auto available_balance = getAvailableBalance(ot.client_id);
     if (ot.open_offset == OFFSET && ot.amount > pt.available_amount)
         return false;
     auto cb = getBalance(ot.client_id);
     if (ot.open_offset == OPEN && ot.long_short == LONG_ORDER && ot.amount * ot.price*multiplier > getAvailableBalance(ot.client_id))
         return false;
-    if (ot.open_offset == OPEN && ot.long_short == SHORT_ORDER &&
-        ot.amount * calc_server->Price_Qoute(ot.instr_code.toStdString()) / getMultiplier(ot.instr_code.toStdString())> getAvailableBalance(ot.client_id))
+    if (ot.open_offset == OPEN && ot.long_short == SHORT_ORDER && underlying_margin > available_balance)
         return false;
     return true;
 
@@ -975,31 +999,31 @@ bool TradeManager::isOrderValid(const OrderType &ot) {
 
 
 double TradeManager::getMultiplier(const string &instr_code) {
-	stringstream ss;
-	ss << "PARAM-" << instr_code.substr(0, 9);
-	string str_multi;
-	redis.HGet(ss.str(), "Multiplier", str_multi);
-	return stod(str_multi);
+    stringstream ss;
+    ss << "PARAM-" << instr_code.substr(0, 9);
+    string str_multi;
+    redis.HGet(ss.str(), "Multiplier", str_multi);
+    return stod(str_multi);
 }
 
 /*
 double TradeManager::getGrossBalance(int client_id) {
-	auto cb = getBalance(client_id);
-	return cb.available_balance + cb.occupied_margin + getMarketValue(client_id);
+    auto cb = getBalance(client_id);
+    return cb.available_balance + cb.occupied_margin + getMarketValue(client_id);
 }
 */
 double TradeManager::getMarginRiskRatio(int client_id) {
-	auto cb = getBalance(client_id);
+    auto cb = getBalance(client_id);
     return cb.occupied_margin / getMarketValueBalance(client_id);
 }
 
 double TradeManager::getMarketValueBalance(int client_id) {
-	auto vec_pos = getAllPosition(client_id);
+    auto vec_pos = getAllPosition(client_id);
     auto balance = getBalance(client_id);
-	double ret=0;
-	for (auto pt : vec_pos) {
+    double ret=0;
+    for (auto pt : vec_pos) {
         ret += getCloseCashFlow(pt);
-	}
+    }
     return ret+balance.total_balance;
 }
 
@@ -1032,125 +1056,125 @@ double TradeManager::getFrozenBalance(int client_id) {
 }
 
 map<string, double> TradeManager::getCalculatedBalance(int client_id) {
-	map<string, double> ret;
+    map<string, double> ret;
     ret["market_value_balance"] = getMarketValueBalance(client_id);
     ret["available_balance"] = getAvailableBalance(client_id);
     ret["margin_risk_ratio"] = getMarginRiskRatio(client_id);
     ret["frozen_balance"] = getFrozenBalance(client_id);
-	return ret;
+    return ret;
 }
 
 inline
 string TradeManager::getInstrType(const string &instr_code) {
-	string::size_type pos;
-	pos = instr_code.find('-');
-	pos = instr_code.find('-', pos+1);
-	//return instr_code_type[instr_code.substr(0, pos)];
-	return "option";
+    string::size_type pos;
+    pos = instr_code.find('-');
+    pos = instr_code.find('-', pos+1);
+    //return instr_code_type[instr_code.substr(0, pos)];
+    return "option";
 }
 
 inline
 double TradeManager::getMarginRate(int client_id, const string &instr_code) {
-	/*QSqlQuery query(db);
-	query.prepare("SELECT * FROM margin_rate WHERE client_id=? AND instr_code=?");
-	query.addBindValue(client_id);
-	query.addBindValue(QString::fromStdString(instr_code));
-	if (!query.exec())
-		errMsgBox("ERROR reading margin rate");
-	if (query.next()) {
-		return query.value(1).toDouble();
-	}
-	else {
-		errMsgBox("No margin rate info.");
-		return -1;
-	}*/
-	return 0.05;
+    /*QSqlQuery query(db);
+    query.prepare("SELECT * FROM margin_rate WHERE client_id=? AND instr_code=?");
+    query.addBindValue(client_id);
+    query.addBindValue(QString::fromStdString(instr_code));
+    if (!query.exec())
+        errMsgBox("ERROR reading margin rate");
+    if (query.next()) {
+        return query.value(1).toDouble();
+    }
+    else {
+        errMsgBox("No margin rate info.");
+        return -1;
+    }*/
+    return 0.05;
 }
 
 double TradeManager::getClosePrice(const PositionType &pt) {
-	return calc_server->Position_Quote(pt.instr_code.toStdString(), pt.long_short);
+    return calc_server->Position_Quote(pt.instr_code.toStdString(), pt.long_short);
 }
 
 PositionRisk TradeManager::getGreeks(const PositionType &pt) {
-	return calc_server->PositionGreeks(pt);
+    return calc_server->PositionGreeks(pt);
 }
 
 PositionRisk TradeManager::getGreeksSum() {
-	auto main_pos_vec = getAllMainAccountPosition();
-	PositionRisk ret;
-	for (auto pos : main_pos_vec) {
-		auto tmp = getGreeks(pos);
-		ret.delta += tmp.delta;
-		ret.gamma += tmp.gamma;
-		ret.theta += tmp.theta;
-		ret.vega += tmp.vega;
-	}
-	return ret;
+    auto main_pos_vec = getAllMainAccountPosition();
+    PositionRisk ret;
+    for (auto pos : main_pos_vec) {
+        auto tmp = getGreeks(pos);
+        ret.delta += tmp.delta;
+        ret.gamma += tmp.gamma;
+        ret.theta += tmp.theta;
+        ret.vega += tmp.vega;
+    }
+    return ret;
 }
 
 
 PositionRisk TradeManager::getClientGreeksSum(int client_id) {
-	auto client_pos_vec = getAllPosition(client_id);
-	PositionRisk ret;
-	for (auto pos : client_pos_vec) {
-		auto tmp = getGreeks(pos);
-		ret.delta += tmp.delta;
-		ret.gamma += tmp.gamma;
-		ret.theta += tmp.theta;
-		ret.vega += tmp.vega;
-	}
-	return ret;
+    auto client_pos_vec = getAllPosition(client_id);
+    PositionRisk ret;
+    for (auto pos : client_pos_vec) {
+        auto tmp = getGreeks(pos);
+        ret.delta += tmp.delta;
+        ret.gamma += tmp.gamma;
+        ret.theta += tmp.theta;
+        ret.vega += tmp.vega;
+    }
+    return ret;
 }
 
 inline
 void TradeManager::setHedgePosition(const PositionTypeTrans &ptt) {
-	QSqlQuery query(db);
-	query.prepare("INSERT INTO hedge_position (instr_code, average_price, total_amount, available_amount, frozen_amount, long_short)"
-		"VALUES (?, ?, ?, ?, ?, ?)");
-	query.addBindValue(QString::fromStdString(ptt.instr_code));
-	query.addBindValue(ptt.average_price);
-	query.addBindValue(ptt.total_amount);
-	query.addBindValue(ptt.available_amount);
-	query.addBindValue(ptt.frozen_amount);
-	query.addBindValue((int)ptt.long_short);
-	if (!query.exec())
-		errMsgBox("Insert hedge position failed.");
+    QSqlQuery query(db);
+    query.prepare("INSERT INTO hedge_position (instr_code, average_price, total_amount, available_amount, frozen_amount, long_short)"
+                  "VALUES (?, ?, ?, ?, ?, ?)");
+    query.addBindValue(QString::fromStdString(ptt.instr_code));
+    query.addBindValue(ptt.average_price);
+    query.addBindValue(ptt.total_amount);
+    query.addBindValue(ptt.available_amount);
+    query.addBindValue(ptt.frozen_amount);
+    query.addBindValue((int)ptt.long_short);
+    if (!query.exec())
+        errMsgBox("Insert hedge position failed.");
 }
 
 void TradeManager::updateHedgePosition(const vector<PositionTypeTrans> &ptt) {
-	QSqlQuery query(db);
-	query.prepare("DELETE FROM hedge_position");
-	if (!query.exec())
-		errMsgBox("Flush hedge position info failed.");
-	for (auto p : ptt)
-		setHedgePosition(p);
+    QSqlQuery query(db);
+    query.prepare("DELETE FROM hedge_position");
+    if (!query.exec())
+        errMsgBox("Flush hedge position info failed.");
+    for (auto p : ptt)
+        setHedgePosition(p);
 
 }
 
 void TradeManager::flushRedis() {
-	redis.Flush();
+    redis.Flush();
 }
 
 void TradeManager::redisWriteClientGreeks(int client_id) {
-	auto greeks = getClientGreeksSum(client_id);
-	stringstream ss;
-	map<string, string> m;
+    auto greeks = getClientGreeksSum(client_id);
+    stringstream ss;
+    map<string, string> m;
     string lprice;
     redis.HGet("IF1506","LastPrice",lprice);
     cout<<"Time: "<<QDateTime::currentDateTime().toLocalTime().toString().toStdString() <<" "
        <<"Delta "<<greeks.delta<<" IF Price:"<<lprice<<endl;
     ss << greeks.delta;
 
-	m["Delta"] = ss.str();
-	ss.str("");
-	ss << greeks.gamma;
-	m["Gamma"] = ss.str();
-	ss.str("");
-	ss << greeks.theta;
-	m["Theta"] = ss.str();
-	ss.str("");
-	ss << greeks.vega;
-	m["Vega"] = ss.str();
+    m["Delta"] = ss.str();
+    ss.str("");
+    ss << greeks.gamma;
+    m["Gamma"] = ss.str();
+    ss.str("");
+    ss << greeks.theta;
+    m["Theta"] = ss.str();
+    ss.str("");
+    ss << greeks.vega;
+    m["Vega"] = ss.str();
     redis.HMSet("lcz", m);
 }
 
@@ -1176,7 +1200,7 @@ double TradeManager::getTransactionMargin(const TransactionType &tt) {
     return 0;
 }
 
-void TradeManager::SettleProgram()
+void TradeManager::settleProgram()
 {
     //Get All Users List
     int num=13;
@@ -1187,7 +1211,7 @@ void TradeManager::SettleProgram()
     QDate date=QDate::currentDate();
     string date_str=date.toString("yyyy-MM-DD").toStdString();
 
-   //Get Daily Settlement File
+    //Get Daily Settlement File
     string settle_file_name="/home/jiangfeng/OTC_FILE/Settle_Parameter/SettleParam-"+date.toString("yyyy-MM-dd").toStdString()+".txt";
     ifstream settle_file(settle_file_name);
     if (!settle_file.is_open())
@@ -1207,13 +1231,13 @@ void TradeManager::SettleProgram()
         string value=temp_msg.substr(pos+1);
         if (key=="ProductID")
         {
-               settledata temp;
-               settle_param[value]=temp;
-               productID=value;
+            settledata temp;
+            settle_param[value]=temp;
+            productID=value;
         }
         else
         {
-               settle_param[productID].parameter[key]=value;
+            settle_param[productID].parameter[key]=value;
         }
     }
 
@@ -1227,17 +1251,17 @@ void TradeManager::SettleProgram()
     {
         if (i.first=="IFX03")
         {
-               calc_server->param_lock.lock();
-               calc_server->value_parameter.Spot_Price=stof(i.second.parameter["Underlying"]);
-               multiplier=stoi(calc_server->value_parameter.other_param["Multiplier"]);
-               settle_underlying=calc_server->value_parameter.Spot_Price;
-               calc_server->value_parameter.other_param["LastSettlePrice"]=i.second.parameter["Underlying"];
-               calc_server->value_parameter.other_param["LastSettleVola"]=i.second.parameter["Volatility"];
-               calc_server->value_parameter.Free_Rate=stof(i.second.parameter["Free_Rate"]);
-               calc_server->value_parameter.Yield_Rate=stof(i.second.parameter["Yield_Rate"]);
-               calc_server->value_parameter.Volatility=stof(i.second.parameter["Volatility"]);
-               calc_server->value_parameter.Value_Method=stoi(i.second.parameter["Value_Method"]);   
-               calc_server->param_lock.unlock();
+            calc_server->param_lock.lock();
+            calc_server->value_parameter.Spot_Price=stof(i.second.parameter["Underlying"]);
+            multiplier=stoi(calc_server->value_parameter.other_param["Multiplier"]);
+            settle_underlying=calc_server->value_parameter.Spot_Price;
+            calc_server->value_parameter.other_param["LastSettlePrice"]=i.second.parameter["Underlying"];
+            calc_server->value_parameter.other_param["LastSettleVola"]=i.second.parameter["Volatility"];
+            calc_server->value_parameter.Free_Rate=stof(i.second.parameter["Free_Rate"]);
+            calc_server->value_parameter.Yield_Rate=stof(i.second.parameter["Yield_Rate"]);
+            calc_server->value_parameter.Volatility=stof(i.second.parameter["Volatility"]);
+            calc_server->value_parameter.Value_Method=stoi(i.second.parameter["Value_Method"]);
+            calc_server->param_lock.unlock();
         }
         else
         {
@@ -1248,9 +1272,9 @@ void TradeManager::SettleProgram()
     //Settle for Each Client
     for (int i=1;i<=num;i++)
     {
-        stringstream ss;
-        ss<<i;
-        string client_id=ss.str();
+        stringstream ssid;
+        ssid<<i;
+        string client_id=ssid.str();
         string settlefile="/home/jiangfeng/OTC_FILE/Settle_Files/ClientNo_"+client_id+"_"+date.toString("yyyy-MM-dd").toStdString()+".txt";
         ofstream outfile(settlefile.c_str());
         ClientInfo ClientInfo;
@@ -1279,101 +1303,105 @@ void TradeManager::SettleProgram()
         float Close_PnL=0;
         float Hold_PnL=0;
 
-       HistTrans=getTransaction(stoi(client_id));
-       for (auto i :HistTrans)
-       {
-           if (i.time.date()==date){
-           outfile<<setw(25)<<setfill(' ')<<i.time.toString("yyyy-MM-dd hh:mm").toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
-           outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<endl;
-           }
-       }
+        HistTrans=getTransaction(stoi(client_id));
+        for (auto i :HistTrans)
+        {
+            if (i.time.date()==date){
+                outfile<<setw(25)<<setfill(' ')<<i.time.toString("yyyy-MM-dd hh:mm").toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
+                outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<endl;
+            }
+        }
 
-       outfile<<endl;
-       outfile<<"           Account Position"<<endl;
-       outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-       outfile<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort"<<setw(15)<<setfill(' ')<<"Price.Avg";
-       outfile<<setw(15)<<setfill(' ')<<"Total No"<<setw(15)<<setfill(' ')<<"No.Avail"<<setw(15)<<setfill(' ')<<"Margin"<<setw(15)<<setfill(' ')<<"SettlePrice"<<endl;
-       outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-       std::vector<PositionType> Position;
-       Position=getAllPosition(stoi(client_id));
-      double New_Margin=0;
+        outfile<<endl;
+        outfile<<"           Account Position"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort"<<setw(15)<<setfill(' ')<<"Price.Avg";
+        outfile<<setw(15)<<setfill(' ')<<"Total No"<<setw(15)<<setfill(' ')<<"No.Avail"<<setw(15)<<setfill(' ')<<"Margin"<<setw(15)<<setfill(' ')<<"SettlePrice"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        std::vector<PositionType> Position;
+        Position=getAllPosition(stoi(client_id));
+        double New_Margin=0;
+        double Close_Value=0;
 
-      float margin_rate=0.05;
-      for (auto i :Position)
-      {
-          float settle_price=calc_server->Settle_Price(i.instr_code.toStdString(),i.long_short);
-         double new_margin=0;
-          Hold_PnL=Hold_PnL+i.total_amount*(i.average_price-settle_price)*(i.long_short==0 ? -1:1)*multiplier;
-          if (i.long_short==1)
-          {
-              new_margin=(settle_price+settle_underlying*margin_rate)*multiplier;
-              New_Margin+=new_margin;
-              ss.clear();
-              ss<<new_margin;
-              setDB_position(stoi(client_id),i.instr_code.toStdString(),"occupied_margin",ss.str());
-          }
-          outfile<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(20)<<setfill(' ')<<i.average_price;
-          outfile<<setw(20)<<setfill(' ')<<i.total_amount<<setw(20)<<setfill(' ')<<i.available_amount<<setw(20)<<setfill(' ')<<new_margin<<setw(20)<<setfill(' ')<<settle_price<<endl;
-      }
+        float margin_rate=0.05;
+        for (auto i :Position)
+        {
+            float settle_price=calc_server->Settle_Price(i.instr_code.toStdString(),i.long_short);
+            settle_price=round(settle_price*100)/100;
+            double new_margin=0;
+            Hold_PnL=Hold_PnL+i.total_amount*(i.average_price-settle_price)*(i.long_short==0 ? -1:1)*multiplier;
+            if (i.long_short==1)
+            {
+                new_margin=(settle_price+settle_underlying*margin_rate)*multiplier*i.total_amount;
+                New_Margin+=new_margin;
+                stringstream ss;
+                ss<<new_margin;
+                setDB_position(stoi(client_id),i.instr_code.toStdString(),i.long_short,"occupied_margin",ss.str());
+            }
+            outfile<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(20)<<setfill(' ')<<i.average_price;
+            outfile<<setw(20)<<setfill(' ')<<i.total_amount<<setw(20)<<setfill(' ')<<i.available_amount<<setw(20)<<setfill(' ')<<new_margin<<setw(20)<<setfill(' ')<<settle_price<<endl;
+            Close_Value+=(i.long_short==0 ? 1:-1)*i.total_amount*settle_price*multiplier;
+        }
 
-    outfile<<endl;
-    outfile<<"           Close PnL Detail"<<endl;
-    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    outfile<<setw(30)<<setfill(' ')<<"Trade Date"<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort";
-    outfile<<setw(15)<<setfill(' ')<<"Price"<<setw(15)<<setfill(' ')<<"Amount"<<setw(15)<<setfill(' ')<<"ClosePnL"<<endl;
-    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    for (auto i :HistTrans)
-    {
-       if (i.time.date()==date && i.open_offset==1)
-       {
-           outfile<<setw(25)<<setfill(' ')<<i.time.toString("yyyy-MM-dd hh:mm").toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
-           outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<setw(35)<<setfill(' ')<<i.close_pnl<<endl;
-           Close_Amount+=i.amount;
-           Close_PnL+=i.close_pnl;
-       }
+        outfile<<endl;
+        outfile<<"           Close PnL Detail"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(30)<<setfill(' ')<<"Trade Date"<<setw(50)<<setfill(' ')<<"Contract Code"<<setw(15)<<setfill(' ')<<"LongShort";
+        outfile<<setw(15)<<setfill(' ')<<"Price"<<setw(15)<<setfill(' ')<<"Amount"<<setw(15)<<setfill(' ')<<"ClosePnL"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        for (auto i :HistTrans)
+        {
+            if (i.time.date()==date && i.open_offset==1)
+            {
+                outfile<<setw(25)<<setfill(' ')<<i.time.toString("yyyy-MM-dd hh:mm").toStdString()<<setw(35)<<setfill(' ')<<i.instr_code.toStdString()<<setw(15)<<setfill(' ')<<(i.long_short==0 ? "Long":"Short")<<setw(15)<<setfill(' ')<<(i.open_offset==0 ? "Open":"Close");
+                outfile<<setw(15)<<setfill(' ')<<i.price<<setw(15)<<setfill(' ')<<i.amount<<setw(35)<<setfill(' ')<<i.close_pnl<<endl;
+                Close_Amount+=i.amount;
+                Close_PnL+=i.close_pnl;
+            }
+        }
+
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(30)<<setfill(' ')<<"Total Close Amount: "<<setw(50)<<setfill(' ')<<Close_Amount;
+        outfile<<setw(30)<<setfill(' ')<<"Total Close PnL: "<<setw(50)<<setfill(' ')<<Close_PnL;
+        outfile<<endl;
+
+
+        outfile<<endl;
+        outfile<<"           Client Balance"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        ClientBalance Balance;
+        Balance=getBalance(stoi(client_id));
+        Balance.client_id=stoi(client_id);
+        //Set Balance Occupied Margin
+        Balance.occupied_margin=New_Margin;
+        //Set Balance Available_Balance
+        Balance.available_balance=Balance.total_balance-Balance.occupied_margin;
+        //Set Balance Withdraw_Balance
+        Balance.withdrawable_balance=Balance.available_balance;
+        setClientBalance(Balance);
+        outfile<<setw(20)<<setfill(' ')<<"Initial Balance"<<setw(20)<<setfill(' ')<<"Total Balance"<<setw(20)<<setfill(' ')<<"Account Available"<<setw(20)<<setfill(' ')<<"Market Value";
+        outfile<<setw(20)<<setfill(' ')<<"Cash WithDraw"<<setw(20)<<setfill(' ')<<"Frozen Margin"<<endl;
+
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<setprecision(2)<<setiosflags(ios_base::fixed)<<Balance.total_balance<<setw(25)<<setfill(' ')<<setprecision(2)<<Balance.available_balance<<setw(25)<<setfill(' ')<<Balance.total_balance+Close_Value;
+        outfile<<setw(25)<<setfill(' ')<<Balance.withdrawable_balance<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
+        outfile<<endl;
+
+        outfile<<"           Client Risks"<<endl;
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(20)<<setfill(' ')<<"Total Delta"<<setw(20)<<setfill(' ')<<"Total Gamma"<<setw(20)<<setfill(' ')<<"Total Vega"<<setw(20)<<setfill(' ')<<"Total Theta";
+        outfile<<setw(20)<<setfill(' ')<<"Risk Ratio"<<endl;
+        PositionRisk Risk=getClientGreeksSum(stoi(client_id));
+        outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
+        outfile<<setw(25)<<setfill(' ')<<Risk.delta<<setw(25)<<setfill(' ')<<Risk.gamma<<setw(25)<<setfill(' ')<<Risk.vega<<setw(25)<<setfill(' ')<<Risk.theta;
+        outfile<<setw(25)<<setfill(' ')<<round(Balance.occupied_margin/Balance.total_balance*10000)/100<<"%"<<endl;
+        outfile<<endl;
     }
 
-   outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-   outfile<<setw(30)<<setfill(' ')<<"Total Close Amount: "<<setw(50)<<setfill(' ')<<Close_Amount;
-   outfile<<setw(30)<<setfill(' ')<<"Total Close PnL: "<<setw(50)<<setfill(' ')<<Close_PnL;
-   outfile<<endl;
 
-
-    outfile<<endl;
-    outfile<<"           Client Balance"<<endl;
-    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    ClientBalance Balance;
-    Balance=getBalance(stoi(client_id));
-    //Set Balance Occupied Margin
-    Balance.occupied_margin=New_Margin;
-    //Set Balance Available_Balance
-    Balance.available_balance=Balance.total_balance-Balance.occupied_margin;
-    //Set Balance Withdraw_Balance
-    Balance.withdrawable_balance=Balance.available_balance;
-    setClientBalance(Balance);
-    outfile<<setw(20)<<setfill(' ')<<"Initial Balance"<<setw(20)<<setfill(' ')<<"Total Balance"<<setw(20)<<setfill(' ')<<"Account Available"<<setw(20)<<setfill(' ')<<"Market Value";
-    outfile<<setw(20)<<setfill(' ')<<"Cash WithDraw"<<setw(20)<<setfill(' ')<<"Frozen Margin"<<endl;
-
-    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    outfile<<setw(25)<<setfill(' ')<<100000<<setw(25)<<setfill(' ')<<Balance.total_balance<<setw(25)<<setfill(' ')<<Balance.available_balance<<setw(25)<<setfill(' ')<<100000+Close_PnL+Hold_PnL;
-    outfile<<setw(25)<<setfill(' ')<<0<<setw(25)<<setfill(' ')<<Balance.occupied_margin<<endl;
-    outfile<<endl;
-
-    outfile<<"           Client Risks"<<endl;
-    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    outfile<<setw(20)<<setfill(' ')<<"Total Delta"<<setw(20)<<setfill(' ')<<"Total Gamma"<<setw(20)<<setfill(' ')<<"Total Vega"<<setw(20)<<setfill(' ')<<"Total Theta";
-    outfile<<setw(20)<<setfill(' ')<<"Risk Ratio"<<endl;
-    PositionRisk Risk=getClientGreeksSum(stoi(client_id));
-    outfile<<"------------------------------------------------------------------------------------------------------------------------------------------------------------------------"<<endl;
-    outfile<<setw(25)<<setfill(' ')<<Risk.delta<<setw(25)<<setfill(' ')<<Risk.gamma<<setw(25)<<setfill(' ')<<Risk.vega<<setw(25)<<setfill(' ')<<Risk.theta;
-    outfile<<setw(25)<<setfill(' ')<<round(Balance.occupied_margin/Balance.total_balance*10000)/100<<"%"<<endl;
-    outfile<<endl;
-    }
-
-
-  cout<<"Settlement Program Finish!"<<endl;
-  int cc;
-  cin>>cc;
+    cout<<"Settlement Program Finish!"<<endl;
+    int cc;
+    cin>>cc;
 }
 
 void TradeManager::setDB_change(int client_id,string table,string key,string value)
@@ -1390,17 +1418,69 @@ void TradeManager::setDB_change(int client_id,string table,string key,string val
     return;
 }
 
-void TradeManager::setDB_position(int client_id,string instr_code,string key,string value)
+void TradeManager::setDB_position(int client_id,string instr_code,LongShortType ls,string key,string value)
 {
     QSqlQuery  query(db);
     stringstream ss;
-    ss<<"UPDATE position SET "<<key<<"=? WHERE id=? AND instr_code=?";
+    ss<<"UPDATE position SET "<<key<<"=? WHERE id=? AND instr_code=? AND long_short=?";
     query.prepare(QString::fromStdString(ss.str()));
     query.addBindValue(QString::fromStdString(value));
     query.addBindValue(client_id);
     query.addBindValue(QString::fromStdString(instr_code));
+    query.addBindValue(ls);
     if (!query.exec())
         qDebug() << "SET balance FAILED... " << query.lastQuery() << " " << query.lastError();
 
     return;
+}
+
+void TradeManager::updateMainBalance(const TransactionType &tt) {
+    QSqlQuery query(db);
+    query.prepare("UPDATE main_balance SET balance=balance+?");
+    query.addBindValue(tt.price*tt.amount*getMultiplier(tt.instr_code.toStdString()) * (tt.long_short==LONG_ORDER?1:-1));
+    if (!query.exec())
+        errMsgBox("更新总帐户权益失败。");
+}
+
+double TradeManager::getMainBalance() {
+    QSqlQuery query(db);
+    double balance = 0;
+    query.prepare("SELECT balance FROM main_balance");
+    if (!query.exec())
+        errMsgBox("读取总帐户权益失败。");
+    if (query.next())
+        balance = query.value("balance").toDouble();
+    else
+        errMsgBox("总帐户权益不存在。");
+    return balance;
+}
+
+int TradeManager::getMaxClientId() {
+    QSqlQuery query(db);
+    int maxId = 0;
+    query.prepare("SELECT count(*) FROM client");
+    if (!query.exec())
+        errMsgBox("读取客户最大编号失败。");
+    if (query.next())
+        maxId = query.value(0).toDouble();
+    else
+        errMsgBox("最大ID读取失败。");
+    return maxId;
+}
+
+double TradeManager::getMainPnl() {
+    QSqlQuery query(db);
+    double pnl;
+    query.prepare("SELECT * from position");
+    if (!query.exec())
+        errMsgBox("读取所有持仓失败失败。（getMainPnl）");
+    while (query.next()) {
+        PositionType pt;
+        pt.instr_code = query.value("instr_code").toString();
+        pt.average_price = query.value("average_price").toDouble();
+        pt.total_amount = query.value("total_amount").toInt();
+        pt.long_short = static_cast<LongShortType>(query.value("long_short").toInt());
+        pnl += getPnL(pt, true);
+    }
+    return -pnl;
 }

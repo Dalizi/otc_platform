@@ -14,12 +14,12 @@ class orderPlaceDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit orderPlaceDialog(boost::shared_ptr<TradeManager> tm,QWidget *parent = 0);
+    explicit orderPlaceDialog(TradeManager *tm, QWidget *parent = 0);
     ~orderPlaceDialog();
 
 private:
     Ui::orderPlaceDialog *ui;
-    boost::shared_ptr<TradeManager> tm;
+    TradeManager *tm;
 
 public slots:
     void onAccepted();

@@ -43,7 +43,7 @@ public:
 	double Volatility_Adjustment(double basic_vol, double maturity, double strike);
 	double Spread_Adjustment(double maturity, double strike, map<string, double> &position);
 	double Basis_Spread(map<string, string> &basis);
-	double Position_PnL(PositionType Position, bool isMain);
+    double Position_PnL(PositionType Position, bool isMain);
     string getUnderlyingCode(const string &instr_code);
 	double getUnderlyingPrice(const string &instr_code);
     int getMultiplier(const string &instr_code);    //获取合约乘数

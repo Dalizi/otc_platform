@@ -13,7 +13,7 @@
 
 using namespace std;
 
-MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
+MainWindow::MainWindow(TradeManager *tm, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     tm(tm),
@@ -32,8 +32,12 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
     connect(ui->refreshPushButton_1, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
     connect(&lcz_timer, SIGNAL(timeout()), this, SLOT(redisWriteClientGreeks()));
     connect(ui->initClientBalancePushButton, SIGNAL(clicked()), this, SLOT(onResetBalanceButtonClicked()));
-    connect(this, SIGNAL(resetBalance(int)), tm.get(), SLOT(resetClientBalance(int)));
+    connect(this, SIGNAL(resetBalance(int)), tm, SLOT(resetClientBalance(int)));
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateClientBalance()));
+    connect(ui->settlePushButton, SIGNAL(clicked()), tm, SLOT(settleProgram()));
+    connect(tm, SIGNAL(transactionComplete()), this, SLOT(updateMainBalance()));
+    connect(tm, SIGNAL(transactionComplete()), this, SLOT(updateMainPosition()));
+    connect(&timer, SIGNAL(timeout()), this, SLOT(updateMainPnL()));
     redisWriteClientGreeks();
     ui->mainAccountPositionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->reportedOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -45,6 +49,8 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
     updateClientBalance();
     refreshTransactionPositionInfo();
 	initMainAccountInfo();
+    updateMainBalance();
+    updateMainPnL();
 	
 
 }
@@ -71,6 +77,7 @@ void MainWindow::initClientInfo() {
 
 }
 
+inline
 void MainWindow::initMainAccountInfo() {
     auto positions = tm->getAllMainAccountPosition();
     ui->mainAccountPositionTableWidget->setRowCount(positions.size());
@@ -240,4 +247,18 @@ void MainWindow::updateClientBalance() {
     ui->availableBalanceLineEdit->setText(QString::number(tm->getAvailableBalance(client_id), 'f'));
     ui->frozenBalanceLineEdit->setText(QString::number(tm->getFrozenBalance(client_id), 'f'));
     ui->marginRatioLineEdit->setText(QString::number(tm->getMarginRiskRatio(client_id), 'f'));
+}
+
+void MainWindow::updateMainBalance() {
+    double balance = tm->getMainBalance();
+    ui->totalMainBalanceLineEdit->setText(QString::number(balance, 'f'));
+}
+
+void MainWindow::updateMainPnL() {
+    double pnl = tm->getMainPnl();
+    ui->pnlLineEdit->setText(QString::number(pnl, 'f'));
+}
+
+void MainWindow::updateMainPosition() {
+    initMainAccountInfo();
 }

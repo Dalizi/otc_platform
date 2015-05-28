@@ -56,6 +56,8 @@ public:
     int getIDFromName(const QString &client_name);
 
     double getPnL(const PositionType &pt, bool isMain);
+    double getMainBalance();
+    double getMainPnl();
 	double getMargin(int client_id);
 	double getMarginRiskRatio(int client_id);
 	double getRTMargin(int client_id);
@@ -64,6 +66,7 @@ public:
 	double getClosePrice(const PositionType &pt);
     double getCloseCashFlow(const PositionType &pt);
     double getCloseCashFlow(const TransactionType &tt);
+    int getMaxClientId();
 	PositionRisk getGreeksSum();
 	PositionRisk getClientGreeksSum(int client_id);
 	PositionRisk getGreeks(const PositionType &pt);
@@ -73,7 +76,6 @@ public:
     void setTransaction(const TransactionType &tt);
     void setPosition(TransactionType tt);
     void setPosition(const PositionType &pt);
-	void setMainPosition(const PositionType &pt);
     int setClientInfo(const ClientInfo &ci);
     void setClientBalance(const ClientBalance &cb);
     std::vector<QString> getClientList();
@@ -91,8 +93,10 @@ public:
     bool isPositionExist(int client_id, const QString &instr_code, int long_short);
 
     void updatePosition(const PositionType &pt, const TransactionType &tt);
+    double updateBalance(const PositionType &pt, const TransactionType &tt);
     void updateBalance(const TransactionType &tt);
 	void updateBalance(int client_id, double adjust_value);
+    void updateMainBalance(const TransactionType &tt);
 
     int authPassword(int client_id, const string &passwd);
     void processSingleOrder(const OrderType &ot);  //处理收到的委托
@@ -102,8 +106,6 @@ public:
 	void updateHedgePosition(const vector<PositionTypeTrans> &hedge_positions);
 
 	void redisWriteClientGreeks(int client_id);
-
-    void SettleProgram();
 private:
     //处理委托
     void acceptOrder(const OrderType &ot);
@@ -128,7 +130,7 @@ private:
 	void flushRedis();
 
     void setDB_change(int client_id,string table,string key,string value);
-    void setDB_position(int client_id,string instr_code,string key,string value);
+    void setDB_position(int client_id,string instr_code,LongShortType ls,string key,string value);
 
 private:
     QSqlDatabase db;
@@ -138,6 +140,10 @@ private:
 
 public slots:
     void resetClientBalance(int client_id);
+    void settleProgram();
+
+signals:
+    void transactionComplete();
 
 };
 

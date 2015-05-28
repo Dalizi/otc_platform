@@ -63,3 +63,6 @@ unix|win32: LIBS += -lthriftnb
 unix|win32: LIBS += -lhiredis
 
 unix|win32: LIBS += -lthriftqt5
+
+RESOURCES += \
+    otc_icon.qrc

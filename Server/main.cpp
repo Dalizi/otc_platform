@@ -8,6 +8,7 @@
 
 #include <QApplication>
 #include <QTextCodec>
+#include <QMessageBox>
 #include <QDebug>
 #include <QThread>
 #include <QTcpServer>
@@ -19,6 +20,8 @@
 #include <thrift/concurrency/ThreadManager.h>
 #include <thrift/concurrency/PosixThreadFactory.h>
 #include <thrift/qt/TQTcpServer.h>
+
+#include <fstream>
 
 #include <stdio.h>  /* defines FILENAME_MAX */
 #ifdef WINDOWS
@@ -47,15 +50,32 @@ int getCWD() {
 
     printf ("The current working directory is %s.\n", cCurrentPath);
 }
+
+string REDIS_ADDR;
+int REDIS_PORT;
+string REDIS_PASSWD;
+
+int getRedisInfo() {
+    ifstream redis_info("redis_info.ini");
+    if (!redis_info.is_open()) {
+        QMessageBox::warning(0, "Warning", "读取redis连接配置文件失败。");
+    }
+    string line;
+    if (getline(redis_info, line)) REDIS_ADDR = line;
+    if (getline(redis_info, line)) REDIS_PORT = stod(line);
+    if (getline(redis_info, line)) REDIS_PASSWD = line;
+}
+
 int main(int argc, char *argv[])
 {
-    getCWD();
+
 	QApplication a(argc, argv);
-    boost::shared_ptr<TradeManager> tm(new TradeManager);
+    getRedisInfo();
+    TradeManager tm;
     int port = 9090;
 
     boost::shared_ptr<QTcpServer> tcp_server( new QTcpServer() );
-    boost::shared_ptr<ClientServiceAsyncHandler> handler(new ClientServiceAsyncHandler(tm));
+    boost::shared_ptr<ClientServiceAsyncHandler> handler(new ClientServiceAsyncHandler(&tm));
     boost::shared_ptr<TAsyncProcessor> processor(new ClientServiceAsyncProcessor(handler));
     boost::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
@@ -66,8 +86,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    tm->SettleProgram();
-    MainWindow w(tm);
+    //tm->settleProgram();
+    MainWindow w(&tm);
     w.show();
 
     return a.exec();

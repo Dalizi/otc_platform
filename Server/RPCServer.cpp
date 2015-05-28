@@ -6,7 +6,7 @@
 
 using namespace std;
 
-ClientServiceHandler::ClientServiceHandler(boost::shared_ptr<TradeManager> tm):tm(tm) {
+ClientServiceHandler::ClientServiceHandler(TradeManager *tm):tm(tm) {
 
 }
 
