@@ -1214,8 +1214,10 @@ void TradeManager::settleProgram()
     //Get Daily Settlement File
     string settle_file_name="/home/jiangfeng/OTC_FILE/Settle_Parameter/SettleParam-"+date.toString("yyyy-MM-dd").toStdString()+".txt";
     ifstream settle_file(settle_file_name);
-    if (!settle_file.is_open())
-        throw runtime_error("Settle File Not Opened ! ");
+    if (!settle_file.is_open()) {
+        QMessageBox::warning(0, "错误", "打开结算配置文件失败。");
+        return;
+    }
     struct settledata
     {
         map<string,string> parameter;
