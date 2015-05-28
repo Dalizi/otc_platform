@@ -94,5 +94,11 @@ OrderTypeTrans &operator<<(OrderTypeTrans &ott, const OrderType &ot);
 
 PositionType &operator<<(PositionType &ot, const PositionTypeTrans &ott);
 PositionTypeTrans &operator<<(PositionTypeTrans &ott, const PositionType &ot);
+
+TransactionType &operator<<(TransactionType &tt, const TransactionTypeTrans &ttt);
+TransactionTypeTrans &operator<<(TransactionTypeTrans &ttt, const TransactionType &tt);
+
+TransactionType &operator<<(TransactionType &tt, const TransactionTypeTrans &ttt);
+TransactionTypeTrans &operator<<(TransactionTypeTrans &ttt, const TransactionType &tt);
 #endif // TRADETYPES_H
 

@@ -233,6 +233,7 @@ void MainWindow::setTransactionLine(QTableWidget *qtw, const TransactionTypeTran
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.open_offset==OPEN?"Open":"Offset")));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.date_time)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.underlying_price)));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.close_pnl)));
 }
 
 void MainWindow::setQouteLine(QTableWidget *qtw, const QouteTrans &qt, int row) {
