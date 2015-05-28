@@ -56,6 +56,8 @@ public:
     int getIDFromName(const QString &client_name);
 
     double getPnL(const PositionType &pt, bool isMain);
+    double getMainBalance();
+    double getMainPnl();
 	double getMargin(int client_id);
 	double getMarginRiskRatio(int client_id);
 	double getRTMargin(int client_id);
@@ -64,6 +66,7 @@ public:
 	double getClosePrice(const PositionType &pt);
     double getCloseCashFlow(const PositionType &pt);
     double getCloseCashFlow(const TransactionType &tt);
+    int getMaxClientId();
 	PositionRisk getGreeksSum();
 	PositionRisk getClientGreeksSum(int client_id);
 	PositionRisk getGreeks(const PositionType &pt);
@@ -73,7 +76,6 @@ public:
     void setTransaction(const TransactionType &tt);
     void setPosition(TransactionType tt);
     void setPosition(const PositionType &pt);
-	void setMainPosition(const PositionType &pt);
     int setClientInfo(const ClientInfo &ci);
     void setClientBalance(const ClientBalance &cb);
     std::vector<QString> getClientList();
@@ -94,6 +96,7 @@ public:
     double updateBalance(const PositionType &pt, const TransactionType &tt);
     void updateBalance(const TransactionType &tt);
 	void updateBalance(int client_id, double adjust_value);
+    void updateMainBalance(const TransactionType &tt);
 
     int authPassword(int client_id, const string &passwd);
     void processSingleOrder(const OrderType &ot);  //处理收到的委托
@@ -138,6 +141,9 @@ private:
 public slots:
     void resetClientBalance(int client_id);
     void settleProgram();
+
+signals:
+    void transactionComplete();
 
 };
 

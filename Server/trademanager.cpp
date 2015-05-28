@@ -435,8 +435,7 @@ void TradeManager::setPosition(TransactionType tt) {
         tt.close_pnl = 0;
     setTransaction(tt);
     if (pt.instr_code == "") {
-        string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
-        int multiplier = calc_server->main_contract.multiplier;
+        double margin_change = updateBalance(pt, tt);
         pt.instr_code = tt.instr_code;
         pt.client_id = tt.client_id;
         pt.long_short = tt.long_short;
@@ -445,12 +444,14 @@ void TradeManager::setPosition(TransactionType tt) {
         pt.available_amount = tt.amount;
         pt.average_price = tt.price;
         pt.underlying_price = calc_server->getUnderlyingPrice(tt.instr_code.toStdString());
-        pt.occupied_margin += updateBalance(pt, tt);
+        pt.occupied_margin += margin_change;
         addPosition(pt);
+        updateMainBalance(tt);
 
     } else {
         updatePosition(pt, tt);
     }
+    emit transactionComplete();
 }
 
 void TradeManager::setPosition(const PositionType &pt) {
@@ -483,20 +484,6 @@ void TradeManager::deletePosition(const PositionType &pt) {
         errMsgBox("删除持仓失败。");
 }
 
-void TradeManager::setMainPosition(const PositionType &pt) {
-    QSqlQuery query(db);
-    query.prepare("UPDATE total_position SET average_price=?, total_amount=?, available_amount=?, frozen_amount=?"
-                  "WHERE instr_code=? AND long_short=?");
-    query.addBindValue(pt.average_price);
-    query.addBindValue(pt.total_amount);
-    query.addBindValue(pt.available_amount);
-    query.addBindValue(pt.frozen_amount);
-    query.addBindValue(pt.instr_code);
-    query.addBindValue((int)pt.long_short);
-    if (!query.exec())
-        qDebug() << "UPDATE total_position FAILED..." << " " << query.lastQuery() << " " << query.lastError();
-
-}
 
 int TradeManager::setClientInfo(const ClientInfo &ci) {
     QSqlQuery query(db);
@@ -704,6 +691,13 @@ bool TradeManager::openDB()
     if (!query.exec())
         qDebug() << "CREATE passwd table FAILED..." << " QUERY is: " << query.lastQuery() << " ERROR is: " << query.lastError();
 
+    query.prepare("CREATE table if not exists main_balance ("
+                  "balance double"
+                  ");");
+    if (!query.exec())
+        errMsgBox("CREATE margin_rate table FAILED...");
+
+
     query.prepare("CREATE table if not exists margin_rate ("
                   "client_id integer,"
                   "instr_code varchar(30),"
@@ -794,6 +788,7 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
     double occupied_margin = pt.occupied_margin;
     double average_price, underlying_price;
     occupied_margin += updateBalance(pt, tt);
+    updateMainBalance(tt);
     if (total_amount != 0) {
         if (tt.open_offset == OPEN) {
             average_price = (pt.average_price * pt.total_amount + tt.price * tt.amount)/ (pt.total_amount + tt.amount);
@@ -1433,4 +1428,55 @@ void TradeManager::setDB_position(int client_id,string instr_code,LongShortType 
         qDebug() << "SET balance FAILED... " << query.lastQuery() << " " << query.lastError();
 
     return;
+}
+
+void TradeManager::updateMainBalance(const TransactionType &tt) {
+    QSqlQuery query(db);
+    query.prepare("UPDATE main_balance SET balance=balance+?");
+    query.addBindValue(tt.price*tt.amount*getMultiplier(tt.instr_code.toStdString()) * (tt.long_short==LONG_ORDER?1:-1));
+    if (!query.exec())
+        errMsgBox("更新总帐户权益失败。");
+}
+
+double TradeManager::getMainBalance() {
+    QSqlQuery query(db);
+    double balance = 0;
+    query.prepare("SELECT balance FROM main_balance");
+    if (!query.exec())
+        errMsgBox("读取总帐户权益失败。");
+    if (query.next())
+        balance = query.value("balance").toDouble();
+    else
+        errMsgBox("总帐户权益不存在。");
+    return balance;
+}
+
+int TradeManager::getMaxClientId() {
+    QSqlQuery query(db);
+    int maxId = 0;
+    query.prepare("SELECT count(*) FROM client");
+    if (!query.exec())
+        errMsgBox("读取客户最大编号失败。");
+    if (query.next())
+        maxId = query.value(0).toDouble();
+    else
+        errMsgBox("最大ID读取失败。");
+    return maxId;
+}
+
+double TradeManager::getMainPnl() {
+    QSqlQuery query(db);
+    double pnl;
+    query.prepare("SELECT * from position");
+    if (!query.exec())
+        errMsgBox("读取所有持仓失败失败。（getMainPnl）");
+    while (query.next()) {
+        PositionType pt;
+        pt.instr_code = query.value("instr_code").toString();
+        pt.average_price = query.value("average_price").toDouble();
+        pt.total_amount = query.value("total_amount").toInt();
+        pt.long_short = static_cast<LongShortType>(query.value("long_short").toInt());
+        pnl += getPnL(pt, true);
+    }
+    return -pnl;
 }

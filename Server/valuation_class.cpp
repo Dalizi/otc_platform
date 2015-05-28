@@ -282,10 +282,7 @@ int Option_Value::Hedger_Excute(int net_delta,double price)
 
 		}
 
-	}
-	
-	TradeManager temp_class;
-	temp_class.setMainPosition(Total_Position[i]);
+    }
 	
 	cout << "Delta Hedged at: " << excute_price << " with amount " << net_delta << endl;
 
@@ -357,14 +354,14 @@ double Option_Value::Position_PnL(PositionType Position, bool isMain)
 
 			temp_param.Strike_Price = strike;
 			temp_param.TimeToMaturity = maturity;
-			double spread = Basis_Spread(temp_param.other_param);
-			if (isMain) {
+            double spread = Basis_Spread(temp_param.other_param);
+            if (isMain) {
                 spread *= (Position.long_short == LONG_ORDER ? 1 : -1);
-			}
-			else {
+            }
+            else {
                 spread *= (Position.long_short == LONG_ORDER ? -1 : 1);
-			}
-			temp_param.Volatility = spread/3 + Volatility_Adjustment(basic_vola, maturity, strike);
+            }
+            temp_param.Volatility = spread/3 + Volatility_Adjustment(basic_vola, maturity, strike);
 
 			switch (temp_param.Value_Method)
 			{
