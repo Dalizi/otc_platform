@@ -184,11 +184,7 @@
           <item>
            <widget class="QPushButton" name="refreshPushButton_1">
             <property name="text">
-             <string/>
-            </property>
-            <property name="icon">
-             <iconset resource="otc_icon.qrc">
-              <normaloff>:/refresh.png</normaloff>:/refresh.png</iconset>
+             <string>刷新</string>
             </property>
            </widget>
           </item>
@@ -795,11 +791,7 @@
           <item>
            <widget class="QPushButton" name="refreshPushButton">
             <property name="text">
-             <string/>
-            </property>
-            <property name="icon">
-             <iconset resource="otc_icon.qrc">
-              <normaloff>:/refresh.png</normaloff>:/refresh.png</iconset>
+             <string>刷新</string>
             </property>
            </widget>
           </item>
@@ -992,8 +984,6 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources>
-  <include location="otc_icon.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
