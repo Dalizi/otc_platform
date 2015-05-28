@@ -13,7 +13,7 @@
 
 using namespace std;
 
-MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
+MainWindow::MainWindow(TradeManager *tm, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     tm(tm),
@@ -32,11 +32,11 @@ MainWindow::MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
     connect(ui->refreshPushButton_1, SIGNAL(clicked()), this, SLOT(onRefreshButtonClicked()));
     connect(&lcz_timer, SIGNAL(timeout()), this, SLOT(redisWriteClientGreeks()));
     connect(ui->initClientBalancePushButton, SIGNAL(clicked()), this, SLOT(onResetBalanceButtonClicked()));
-    connect(this, SIGNAL(resetBalance(int)), tm.get(), SLOT(resetClientBalance(int)));
+    connect(this, SIGNAL(resetBalance(int)), tm, SLOT(resetClientBalance(int)));
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateClientBalance()));
-    connect(ui->settlePushButton, SIGNAL(clicked()), tm.get(), SLOT(settleProgram()));
-    connect(tm.get(), SIGNAL(transactionComplete()), this, SLOT(updateMainBalance()));
-    connect(tm.get(), SIGNAL(transactionComplete()), this, SLOT(updateMainPosition()));
+    connect(ui->settlePushButton, SIGNAL(clicked()), tm, SLOT(settleProgram()));
+    connect(tm, SIGNAL(transactionComplete()), this, SLOT(updateMainBalance()));
+    connect(tm, SIGNAL(transactionComplete()), this, SLOT(updateMainPosition()));
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateMainPnL()));
     redisWriteClientGreeks();
     ui->mainAccountPositionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);

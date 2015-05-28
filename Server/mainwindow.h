@@ -25,7 +25,7 @@ class MainWindow : public QMainWindow
     friend class TradeManager;
 
 public:
-    explicit MainWindow(boost::shared_ptr<TradeManager> tm, QWidget *parent = 0);
+    explicit MainWindow(TradeManager *tm, QWidget *parent = 0);
     ~MainWindow();
 
 private:
@@ -41,7 +41,7 @@ private:
 
 private:
     Ui::MainWindow *ui;
-    boost::shared_ptr<TradeManager> tm;
+    TradeManager *tm;
     AddClientDialog *acd;
     orderPlaceDialog *opd;
 	QStringList cidStringList;

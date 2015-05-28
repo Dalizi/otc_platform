@@ -5,7 +5,7 @@
 
 using namespace std;
 
-AddClientDialog::AddClientDialog(boost::shared_ptr<TradeManager> arg_tm, QWidget *parent) :
+AddClientDialog::AddClientDialog(TradeManager *arg_tm, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AddClientDialog),
     tm(arg_tm)

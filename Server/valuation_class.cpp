@@ -4,6 +4,10 @@
 
 using namespace std;
 
+extern string REDIS_ADDR;
+extern int REDIS_PORT;
+extern string REDIS_PASSWD;
+
 Option_Value::Option_Value(string infile_location, TradeManager *tm) : tm(tm)
 {
     ifstream in_file(infile_location);
@@ -19,8 +23,7 @@ Option_Value::Option_Value(string infile_location, TradeManager *tm) : tm(tm)
     }
 
 
-    string host("10.2.6.31");
-    int iRet = my_redis.Connect(host, 6379, "Finders6");
+    int iRet = my_redis.Connect(REDIS_ADDR, REDIS_PORT, REDIS_PASSWD);
     //int iRet = my_redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;

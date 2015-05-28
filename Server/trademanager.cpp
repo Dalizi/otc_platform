@@ -15,6 +15,10 @@
 
 #include "valuation_class.h"
 
+extern string REDIS_ADDR;
+extern int REDIS_PORT;
+extern string REDIS_PASSWD;
+
 
 using namespace std;
 
@@ -22,7 +26,7 @@ TradeManager::TradeManager(QObject *parent) :calc_server(new Option_Value("Trade
 {
     openDB();
     calcRun();
-    int iRet = redis.Connect("10.2.6.31", 6379, "Finders6");
+    int iRet = redis.Connect(REDIS_ADDR, REDIS_PORT, REDIS_PASSWD);
     //int iRet = redis.Connect("127.0.0.1", 6379);
     if (iRet != 0) {
         stringstream ss;

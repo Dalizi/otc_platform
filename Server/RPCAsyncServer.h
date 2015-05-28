@@ -16,7 +16,7 @@ using boost::shared_ptr;
 
 class ClientServiceAsyncHandler : public ClientServiceCobSvIf {
  public:
-  ClientServiceAsyncHandler(boost::shared_ptr<TradeManager> tm):tm(tm) {
+  ClientServiceAsyncHandler(TradeManager *tm):tm(tm) {
     syncHandler_ = std::auto_ptr<ClientServiceHandler>(new ClientServiceHandler(tm));
     // Your initialization goes here
   }
@@ -106,6 +106,6 @@ class ClientServiceAsyncHandler : public ClientServiceCobSvIf {
 
  protected:
   std::auto_ptr<ClientServiceHandler> syncHandler_;
-  boost::shared_ptr<TradeManager> tm;
+  TradeManager *tm;
 };
 

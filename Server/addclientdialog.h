@@ -13,13 +13,13 @@ class AddClientDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit AddClientDialog(boost::shared_ptr<TradeManager> tm,QWidget *parent = 0);
-    explicit AddClientDialog(boost::shared_ptr<TradeManager> tm, int client_id, QWidget *parent = 0);
+    explicit AddClientDialog(TradeManager *tm,QWidget *parent = 0);
+    explicit AddClientDialog(TradeManager *tm, int client_id, QWidget *parent = 0);
     ~AddClientDialog();
 
 private:
     Ui::AddClientDialog *ui;
-    boost::shared_ptr<TradeManager> tm;
+    TradeManager *tm;
 
 signals:
     void clientAdded(QString client_name);

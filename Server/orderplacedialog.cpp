@@ -4,7 +4,7 @@
 #include <iomanip>
 
 
-orderPlaceDialog::orderPlaceDialog(boost::shared_ptr<TradeManager> tm, QWidget *parent) :
+orderPlaceDialog::orderPlaceDialog(TradeManager *tm, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::orderPlaceDialog),
     tm(tm)

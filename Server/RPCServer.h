@@ -7,7 +7,7 @@
 
 class ClientServiceHandler : virtual public ClientServiceIf {
 public:
-    ClientServiceHandler(boost::shared_ptr<TradeManager> tm);
+    ClientServiceHandler(TradeManager *tm);
 
 	~ClientServiceHandler();
 
@@ -41,6 +41,6 @@ public:
 
 
 private:
-    boost::shared_ptr<TradeManager> tm;
+    TradeManager *tm;
 
 };
