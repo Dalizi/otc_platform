@@ -44,7 +44,7 @@ private:
     Ui::MainWindow *ui;
     ClientServiceClient *rpc;
     QTimer timer;
-    const std::vector<QString> order_status_lookup = {QString("Reported"), QString("Accepted"), QString("Rejected"), QString("Canceled")};
+    const std::vector<QString> order_status_lookup = {QString("已报"), QString("已成"), QString("废单"), QString("已撤")};
 
 
 private:

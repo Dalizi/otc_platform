@@ -447,8 +447,8 @@ void TradeManager::setPosition(TransactionType tt) {
         pt.available_amount = tt.amount;
         pt.average_price = tt.price;
         pt.underlying_price = calc_server->getUnderlyingPrice(tt.instr_code.toStdString());
-        addPosition(pt);
         updateBalance(pt, tt);
+        addPosition(pt);
         updateMainBalance(tt);
 
     } else {
@@ -784,11 +784,10 @@ vector<PositionType> TradeManager::getAllMainAccountPosition() {
     return ret;
 }
 
-void TradeManager::updatePosition(PositionType pt, const TransactionType &tt) {
+void TradeManager::updatePosition(PositionType &pt, const TransactionType &tt) {
     QSqlQuery query(db);
     int adjust_param = tt.open_offset == OpenOffsetType::OPEN ? 1 : -1;
     int total_amount = pt.total_amount + tt.amount * adjust_param;
-    double occupied_margin = pt.occupied_margin;
     double average_price, underlying_price;
     updateBalance(pt, tt);
     updateMainBalance(tt);
@@ -807,7 +806,7 @@ void TradeManager::updatePosition(PositionType pt, const TransactionType &tt) {
         query.addBindValue(total_amount);
         query.addBindValue(average_price);
         query.addBindValue(underlying_price);
-        query.addBindValue(occupied_margin);
+        query.addBindValue(pt.occupied_margin);
         query.addBindValue(pt.instr_code);
         query.addBindValue(pt.client_id);
         query.addBindValue(static_cast<int>(pt.long_short));
@@ -824,7 +823,7 @@ void TradeManager::updatePosition(PositionType pt, const TransactionType &tt) {
 
 }
 
-void TradeManager::updateBalance(PositionType pt, const TransactionType &tt) {
+void TradeManager::updateBalance(PositionType &pt, const TransactionType &tt) {
     double margin_chng = 0;
     string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
     int multiplier = calc_server->main_contract.multiplier;
@@ -1013,7 +1012,7 @@ double TradeManager::getGrossBalance(int client_id) {
 */
 double TradeManager::getMarginRiskRatio(int client_id) {
     auto cb = getBalance(client_id);
-    return cb.occupied_margin / getMarketValueBalance(client_id);
+    return cb.occupied_margin / cb.total_balance;
 }
 
 double TradeManager::getMarketValueBalance(int client_id) {

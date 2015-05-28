@@ -201,7 +201,7 @@ void MainWindow::setPositionLine(QTableWidget *qtw, const PositionTypeTrans &pbt
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.frozen_amount)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.average_price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(rpc->get_pnl(pbt))));
-    qtw->setItem(row, column++, new QTableWidgetItem(pbt.long_short==LONG_ORDER?"Buy":"Sell"));
+    qtw->setItem(row, column++, new QTableWidgetItem(pbt.long_short==LONG_ORDER?"买":"卖"));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(rpc->get_close_price(pbt), 'f')));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.occupied_margin)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.underlying_price)));
@@ -214,8 +214,8 @@ void MainWindow::setOrderLine(QTableWidget *qtw, const OrderTypeTrans &ot, int r
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.instr_code)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.amount)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short==LONG_ORDER?"Buy":"Sell")));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.open_offset==OPEN?"Open":"Offset")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short==LONG_ORDER?"买":"卖")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.open_offset==OPEN?"开仓":"平仓")));
     //auto time = QDateTime::fromString(QString::fromStdString(ot.date_time), "yyyy-MM-dd HH:mm:ss");
     //time.setTimeZone(QTimeZone(8));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.date_time)));
@@ -229,8 +229,8 @@ void MainWindow::setTransactionLine(QTableWidget *qtw, const TransactionTypeTran
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.instr_code)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.amount)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.long_short==LONG_ORDER?"Buy":"Sell")));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.open_offset==OPEN?"Open":"Offset")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.long_short==LONG_ORDER?"买":"卖")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.open_offset==OPEN?"开仓":"平仓")));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.date_time)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.underlying_price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.close_pnl)));
@@ -265,7 +265,7 @@ void MainWindow::onPositionCellDoubleClicked(int row, int col) {
     ptt.available_amount = ui->positionTableWidget->item(row, 2)->text().toInt();
     ptt.frozen_amount = ui->positionTableWidget->item(row, 3)->text().toDouble();
     ptt.average_price = ui->positionTableWidget->item(row, 4)->text().toDouble();
-    ptt.long_short = ui->positionTableWidget->item(row, 6)->text()=="Buy"?LONG_ORDER : SHORT_ORDER;
+    ptt.long_short = ui->positionTableWidget->item(row, 6)->text()=="买"?LONG_ORDER : SHORT_ORDER;
     ptt.offset_price = rpc->get_close_price(ptt);
     QouteTrans qt;
     qt.instr_code = ptt.instr_code;
