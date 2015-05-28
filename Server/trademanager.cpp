@@ -439,7 +439,6 @@ void TradeManager::setPosition(TransactionType tt) {
         tt.close_pnl = 0;
     setTransaction(tt);
     if (pt.instr_code == "") {
-        double margin_change = updateBalance(pt, tt);
         pt.instr_code = tt.instr_code;
         pt.client_id = tt.client_id;
         pt.long_short = tt.long_short;
@@ -448,8 +447,8 @@ void TradeManager::setPosition(TransactionType tt) {
         pt.available_amount = tt.amount;
         pt.average_price = tt.price;
         pt.underlying_price = calc_server->getUnderlyingPrice(tt.instr_code.toStdString());
-        pt.occupied_margin += margin_change;
         addPosition(pt);
+        updateBalance(pt, tt);
         updateMainBalance(tt);
 
     } else {
@@ -785,13 +784,13 @@ vector<PositionType> TradeManager::getAllMainAccountPosition() {
     return ret;
 }
 
-void TradeManager::updatePosition(const PositionType &pt, const TransactionType &tt) {
+void TradeManager::updatePosition(PositionType pt, const TransactionType &tt) {
     QSqlQuery query(db);
     int adjust_param = tt.open_offset == OpenOffsetType::OPEN ? 1 : -1;
     int total_amount = pt.total_amount + tt.amount * adjust_param;
     double occupied_margin = pt.occupied_margin;
     double average_price, underlying_price;
-    occupied_margin += updateBalance(pt, tt);
+    updateBalance(pt, tt);
     updateMainBalance(tt);
     if (total_amount != 0) {
         if (tt.open_offset == OPEN) {
@@ -825,7 +824,7 @@ void TradeManager::updatePosition(const PositionType &pt, const TransactionType 
 
 }
 
-double TradeManager::updateBalance(const PositionType &pt, const TransactionType &tt) {
+void TradeManager::updateBalance(PositionType pt, const TransactionType &tt) {
     double margin_chng = 0;
     string underlying_code = calc_server->getUnderlyingCode(tt.instr_code.toStdString());
     int multiplier = calc_server->main_contract.multiplier;
@@ -850,7 +849,7 @@ double TradeManager::updateBalance(const PositionType &pt, const TransactionType
     query.addBindValue(tt.client_id);
     if (!query.exec())
         QMessageBox::warning(0, "Warning", "更新客户资金失败。");
-    return margin_chng;
+    pt.occupied_margin += margin_chng;
 }
 
 void TradeManager::updateBalance(const TransactionType &tt) {
@@ -1039,7 +1038,6 @@ double TradeManager::getCloseCashFlow(const TransactionType &tt) {
     return (tt.getPositionDirect()==LONG_ORDER?1:-1) * tt.price * tt.amount * calc_server->main_contract.multiplier;
 }
 
-inline
 double TradeManager::getAvailableBalance(int client_id) {
     auto balance = getBalance(client_id);
     return balance.total_balance - balance.occupied_margin - getFrozenBalance(client_id);

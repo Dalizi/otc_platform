@@ -92,8 +92,8 @@ public:
 
     bool isPositionExist(int client_id, const QString &instr_code, int long_short);
 
-    void updatePosition(const PositionType &pt, const TransactionType &tt);
-    double updateBalance(const PositionType &pt, const TransactionType &tt);
+    void updatePosition(PositionType pt, const TransactionType &tt);
+    void updateBalance(PositionType pt, const TransactionType &tt);
     void updateBalance(const TransactionType &tt);
 	void updateBalance(int client_id, double adjust_value);
     void updateMainBalance(const TransactionType &tt);

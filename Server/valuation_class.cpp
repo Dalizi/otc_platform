@@ -777,7 +777,6 @@ vector<string> Option_Value::Get_Main_Contract_Codes() {
 	return ret;
 }
 
-inline
 string Option_Value::getUnderlyingCode(const string &option_code) {
     string underlying_code;
     my_redis.HGet("PARAM-OTC-IFX03", "Underlying_Code", underlying_code);
