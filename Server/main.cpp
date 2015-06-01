@@ -48,7 +48,7 @@ int getCWD() {
 
     cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
 
-    printf ("The current working directory is %s.\n", cCurrentPath);
+    printf ("当前工作目录是%s.\n", cCurrentPath);
 }
 
 string REDIS_ADDR;
@@ -82,7 +82,9 @@ int main(int argc, char *argv[])
     boost::shared_ptr<TQTcpServer> server( new TQTcpServer(tcp_server, processor, protocolFactory) );
     if( !tcp_server->isListening() && !tcp_server->listen(QHostAddress::Any, port) )
     {
-        throw runtime_error("ERROR: Listen to TCP server.");
+        stringstream ss;
+        ss <<"监听" <<port <<"端口失败，端口或被占用。";
+        QMessageBox::warning(0, "错误", QString::fromStdString(ss.str()));
         return 1;
     }
 
