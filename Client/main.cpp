@@ -20,14 +20,13 @@ using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
 
 int ClientId;
-
+string SERVER_ADDR;
 int main(int argc, char *argv[])
 {
     ifstream f("config.ini");
-    string ip;
-    getline(f, ip);
+    getline(f, SERVER_ADDR);
     QApplication a(argc, argv);
-    boost::shared_ptr<TTransport> socket(new TSocket(ip, 9090));
+    boost::shared_ptr<TTransport> socket(new TSocket(SERVER_ADDR, 9090));
     boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
     boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
     ClientServiceClient client(protocol);
@@ -35,7 +34,7 @@ int main(int argc, char *argv[])
     try {
         transport->open();
         stringstream ss;
-        ss <<"Connected to host: "<<ip;
+        ss <<"Connected to host: "<<SERVER_ADDR;
         QMessageBox::about(0, "Connected", QString::fromStdString(ss.str()));
         LoginDialog loginDialog(&client);
         MainWindow w(&client);
