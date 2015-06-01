@@ -7,6 +7,7 @@
 #include <QMainWindow>
 #include <QTableWidget>
 #include <QTimer>
+#include <QtConcurrent/QtConcurrent>
 
 namespace Ui {
 class MainWindow;
@@ -24,18 +25,17 @@ public:
     void start();
 
 public slots:
-    void updatePositionInfo();
-    void updateIntraDayTransactionInfo();
-    void updateHistTransactionInfo();
-    void updateIntraDayOrderInfo();
-    void updateHistOrderInfo();
-    void updateQoute();
-    void updateBalance();
+    void onRefreshPositionButtonClicked();
+    void onRefreshIntraDayTransactionButtonClicked();
+    void onRefreshHistTransactionButtonClicked();
+    void onRefreshIntraDayOrderButtonClicked();
+    void onRefreshHistOrderButtonClicked();
 
 private slots:
     void onPlaceOrderButtonClicked();
     void onQouteCellDoubleClicked(int row, int col);
     void onPositionCellDoubleClicked(int row, int col);
+    void onUpdateTimerTimeout();
 
 signals:
     //void qouteChanged(QouteTrans qt);
@@ -49,6 +49,9 @@ private:
 #elif defined(Q_OS_WIN32)
     const std::vector<QString> order_status_lookup = std::vector<QString>({QString("Reported"), QString("Accepted"), QString("Rejected"), QString("Canceled")});
 #endif
+    std::shared_ptr<ClientServiceClient> timed_client;
+    QFuture<void> timed_future, position_future, intraday_order_future, hist_order_future, intraday_transaction_future, hist_transaction_future;
+    std::shared_ptr<ClientServiceClient> balance_client;
 
 private:
     void setPositionLine(QTableWidget *qtw, const PositionTypeTrans &pbt, int row);
@@ -56,6 +59,16 @@ private:
     void setTransactionLine(QTableWidget *qtw, const TransactionTypeTrans &tt, int row);
     void setQouteLine(QTableWidget *qtw, const QouteTrans &ot, int row);
     void initDate();
+    void updateQoute();
+    void updateBalance();
+    void updateQouteAndBalance();
+    void updatePositionInfo();
+    void updateIntraDayTransactionInfo();
+    void updateHistTransactionInfo();
+    void updateIntraDayOrderInfo();
+    void updateHistOrderInfo();
+
+    std::shared_ptr<ClientServiceClient> getThriftClient();
 
 };
 
