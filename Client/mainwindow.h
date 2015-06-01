@@ -44,8 +44,11 @@ private:
     Ui::MainWindow *ui;
     ClientServiceClient *rpc;
     QTimer timer;
+#ifdef Q_OS_LINUX
     const std::vector<QString> order_status_lookup = {QString("Reported"), QString("Accepted"), QString("Rejected"), QString("Canceled")};
-
+#elif defined(Q_OS_WIN32)
+    const std::vector<QString> order_status_lookup = std::vector<QString>({QString("Reported"), QString("Accepted"), QString("Rejected"), QString("Canceled")});
+#endif
 
 private:
     void setPositionLine(QTableWidget *qtw, const PositionTypeTrans &pbt, int row);

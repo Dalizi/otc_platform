@@ -110,10 +110,6 @@ void MainWindow::updateIntraDayTransactionInfo(){
     for (auto o:transaction_vec) {
         setTransactionLine(ui->intraDayTransactionTableWidget, o, row++);
     }
-    vector<string> svec;
-    for (auto s:svec) {
-        cout <<s;
-    }
 }
 
 void MainWindow::updateHistTransactionInfo() {
