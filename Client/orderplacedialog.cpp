@@ -35,6 +35,10 @@ orderPlaceDialog::orderPlaceDialog(ClientServiceClient *csc, QouteTrans *qt, boo
         ui->offsetRadioButton->setChecked(true);
         ui->offsetRadioButton->setDisabled(true);
 
+    } else {
+        ui->offsetRadioButton->setVisible(false);
+        ui->openRadioButton->setChecked(true);
+        ui->openRadioButton->setDisabled(true);
     }
 
     connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(onAccepted()));

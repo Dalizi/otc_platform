@@ -59,6 +59,7 @@ int getRedisInfo() {
     ifstream redis_info("redis_info.ini");
     if (!redis_info.is_open()) {
         QMessageBox::warning(0, "Warning", "读取redis连接配置文件失败。");
+        exit(1);
     }
     string line;
     if (getline(redis_info, line)) REDIS_ADDR = line;
@@ -86,7 +87,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //tm->settleProgram();
     MainWindow w(&tm);
     w.show();
 

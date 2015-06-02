@@ -58,14 +58,7 @@ void ClientServiceHandler::get_order(std::vector<OrderTypeTrans> & _return, cons
 		bool test3 = order.time.date() <= qend_date;
 		auto test4 = qend_date.toString("yy-MM-dd").toStdString();
 		*/
-		if (order.time.date() >= qstart_date && order.time.date() <= qend_date) {
-			/*ott.amount = order.amount;
-			ott.client_id = order.client_id;
-			ott.date_time = order.time.toString("yyyy-MM-dd hh:mm:ss").toStdString();
-			ott.instr_code = order.instr_code.toStdString();
-			ott.long_short = order.long_short;
-			ott.open_offset = order.open_offset;
-			ott.order_id = order.order_id.toStdString();*/
+        if (order.time.date() >= qstart_date && order.time.date() <= qend_date) {
 			ott << order;
             _return.push_back(ott);
 		}
@@ -82,7 +75,7 @@ void ClientServiceHandler::get_transaction(std::vector<TransactionTypeTrans> & _
 	auto qstart_date = QDate::fromString(QString::fromStdString(start_date), "yyyy-MM-dd");
 	auto qend_date = QDate::fromString(QString::fromStdString(end_date), "yyyy-MM-dd");
 	for (auto transaction : transaction_vec) {
-		TransactionTypeTrans ott;
+        TransactionTypeTrans ttt;
 		/*
 		auto test1 = order.time.date().toString("yy-MM-dd").toStdString();
 		bool test2 = order.time.date() >= qstart_date;
@@ -90,16 +83,8 @@ void ClientServiceHandler::get_transaction(std::vector<TransactionTypeTrans> & _
 		auto test4 = qend_date.toString("yy-MM-dd").toStdString();
 		*/
 		if (transaction.time.date() >= qstart_date && transaction.time.date() <= qend_date) {
-			ott.amount = transaction.amount;
-			ott.price = transaction.price;
-			ott.client_id = transaction.client_id;
-			ott.date_time = transaction.time.toString("yyyy-MM-dd hh:mm:ss").toStdString();
-			ott.instr_code = transaction.instr_code.toStdString();
-			ott.long_short = transaction.long_short;
-			ott.open_offset = transaction.open_offset;
-			ott.transaction_id = transaction.transaction_id.toStdString();
-			ott.underlying_price = transaction.underlying_price;
-			_return.push_back(ott);
+            ttt << transaction;
+            _return.push_back(ttt);
 		}
 		
 	}

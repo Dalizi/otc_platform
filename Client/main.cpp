@@ -34,8 +34,8 @@ int main(int argc, char *argv[])
     try {
         transport->open();
         stringstream ss;
-        ss <<"Connected to host: "<<SERVER_ADDR;
-        QMessageBox::about(0, "Connected", QString::fromStdString(ss.str()));
+        ss <<"连接到服务器: "<<SERVER_ADDR;
+        QMessageBox::about(0, "已连接", QString::fromStdString(ss.str()));
         LoginDialog loginDialog(&client);
         MainWindow w(&client);
         int login = 0;

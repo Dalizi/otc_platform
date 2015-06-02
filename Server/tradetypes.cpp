@@ -50,3 +50,28 @@ PositionTypeTrans &operator<<(PositionTypeTrans &ptt, const PositionType &pt) {
 	return ptt;
 }
 
+TransactionType &operator<<(TransactionType &tt, const TransactionTypeTrans &ttt) {
+    tt.amount = ttt.amount;
+    tt.price = ttt.price;
+    tt.client_id = ttt.client_id;
+    tt.instr_code = QString::fromStdString(ttt.instr_code);
+    tt.long_short = ttt.long_short;
+    tt.open_offset = ttt.open_offset;
+    tt.transaction_id = QString::fromStdString(ttt.transaction_id);
+    tt.underlying_price = ttt.underlying_price;
+    tt.close_pnl = ttt.close_pnl;
+}
+
+TransactionTypeTrans &operator<<(TransactionTypeTrans &ttt, const TransactionType &tt) {
+    ttt.amount = tt.amount;
+    ttt.price = tt.price;
+    ttt.client_id = tt.client_id;
+    ttt.date_time = tt.time.toString("yyyy-MM-dd hh:mm:ss").toStdString();
+    ttt.instr_code = tt.instr_code.toStdString();
+    ttt.long_short = tt.long_short;
+    ttt.open_offset = tt.open_offset;
+    ttt.transaction_id = tt.transaction_id.toStdString();
+    ttt.underlying_price = tt.underlying_price;
+    ttt.close_pnl = tt.close_pnl;
+}
+

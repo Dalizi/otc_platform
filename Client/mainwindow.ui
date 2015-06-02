@@ -868,6 +868,11 @@
                 <string>成交标的价格</string>
                </property>
               </column>
+              <column>
+               <property name="text">
+                <string>平仓盈亏</string>
+               </property>
+              </column>
              </widget>
             </item>
            </layout>
@@ -999,6 +1004,11 @@
                 <string>成交标的价格</string>
                </property>
               </column>
+              <column>
+               <property name="text">
+                <string>平仓盈亏</string>
+               </property>
+              </column>
              </widget>
             </item>
            </layout>
@@ -1017,7 +1027,7 @@
      <x>0</x>
      <y>0</y>
      <width>1155</width>
-     <height>28</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>
