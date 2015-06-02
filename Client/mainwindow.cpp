@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QTimeZone>
+#include <QVector>
 
 
 #include <sstream>
@@ -46,6 +47,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::start() {
+    qRegisterMetaType<QVector<int>>("QVector<int>");
     initDate();
     updateClientInfo();
     updatePositionInfo();
@@ -324,5 +326,5 @@ void MainWindow::onRefreshIntraDayOrderButtonClicked() {
     intraday_order_future = QtConcurrent::run(this, &MainWindow::updateIntraDayOrderInfo);
 }
 void MainWindow::onRefreshHistOrderButtonClicked() {
-    hist_order_future = QtConcurrent::run(this, &MainWindow::updateHistTransactionInfo);
+    hist_order_future = QtConcurrent::run(this, &MainWindow::updateHistOrderInfo);
 }
