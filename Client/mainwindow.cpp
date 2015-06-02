@@ -72,12 +72,12 @@ void MainWindow::start() {
 }
 
 void MainWindow::initDate() {
-    ui->histTransactionStartDateEdit->setDate(QDate::currentDate());
+    ui->histTransactionStartDateEdit->setDate(QDate::currentDate().addDays(-10));
     ui->histTransactionStartDateEdit->setMaximumDate(QDate::currentDate());
     ui->histTransactionEndDateEdit->setDate(QDate::currentDate());
     ui->histTransactionEndDateEdit->setMaximumDate(QDate::currentDate());
 
-    ui->histOrderStartDateEdit->setDate(QDate::currentDate());
+    ui->histOrderStartDateEdit->setDate(QDate::currentDate().addDays(-10));
     ui->histOrderStartDateEdit->setMaximumDate(QDate::currentDate());
     ui->histOrderEndDateEdit->setDate(QDate::currentDate());
     ui->histOrderEndDateEdit->setMaximumDate(QDate::currentDate());
