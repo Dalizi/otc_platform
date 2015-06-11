@@ -3,16 +3,26 @@
 
 #include <QString>
 #include <QTimeZone>
+#include <QVector>
 
 
 #include <sstream>
 #include <iomanip>
 #include <vector>
 
+#include <thrift/protocol/TBinaryProtocol.h>
+#include <thrift/transport/TSocket.h>
+#include <thrift/transport/TTransportUtils.h>
+
+using namespace apache::thrift;
+using namespace apache::thrift::protocol;
+using namespace apache::thrift::transport;
+
 
 using namespace std;
 
 extern int ClientId;
+extern string SERVER_ADDR;
 
 MainWindow::MainWindow(ClientServiceClient *csc, QWidget *parent) :
     QMainWindow(parent),
@@ -20,30 +30,37 @@ MainWindow::MainWindow(ClientServiceClient *csc, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    timed_client = getThriftClient();
+    balance_client = getThriftClient();
 
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    timed_future.waitForFinished();
+    position_future.waitForFinished();
+    intraday_order_future.waitForFinished();
+    hist_order_future.waitForFinished();
+    intraday_transaction_future.waitForFinished();
+    hist_transaction_future.waitForFinished();
 }
 
 void MainWindow::start() {
+    qRegisterMetaType<QVector<int>>("QVector<int>");
     initDate();
     updateClientInfo();
     updatePositionInfo();
     updateBalance();
-    connect(ui->intraDayOrderQueryPushButton, SIGNAL(clicked()), this, SLOT(updateIntraDayOrderInfo()));
-    connect(ui->histOrderQueryPushButton, SIGNAL(clicked()), this, SLOT(updateHistOrderInfo()));
-    connect(ui->intraDayTransactionQueryPushButton, SIGNAL(clicked()), this, SLOT(updateIntraDayTransactionInfo()));
-    connect(ui->histTransactionQueryPushButton, SIGNAL(clicked()), this, SLOT(updateHistTransactionInfo()));
-    connect(ui->positionRefreshPushButton, SIGNAL(clicked()), this, SLOT(updatePositionInfo()));
+    connect(ui->intraDayOrderQueryPushButton, SIGNAL(clicked()), this, SLOT(onRefreshIntraDayOrderButtonClicked()));
+    connect(ui->histOrderQueryPushButton, SIGNAL(clicked()), this, SLOT(onRefreshHistOrderButtonClicked()));
+    connect(ui->intraDayTransactionQueryPushButton, SIGNAL(clicked()), this, SLOT(onRefreshIntraDayTransactionButtonClicked()));
+    connect(ui->histTransactionQueryPushButton, SIGNAL(clicked()), this, SLOT(onRefreshHistTransactionButtonClicked()));
+    connect(ui->positionRefreshPushButton, SIGNAL(clicked()), this, SLOT(onRefreshPositionButtonClicked()));
     connect(ui->placeOrderPushButton, SIGNAL(clicked()), this, SLOT(onPlaceOrderButtonClicked()));
-    //connect(this, SIGNAL(qouteChanged(QouteTrans)), opd, SLOT(updateQouteInfo(QouteTrans)));
     connect(ui->qouteTableWidget, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(onQouteCellDoubleClicked(int,int)));
     connect(ui->positionTableWidget, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(onPositionCellDoubleClicked(int,int)));
-    connect(&timer, SIGNAL(timeout()), this, SLOT(updateQoute()));
-    connect(&timer, SIGNAL(timeout()), this, SLOT(updateBalance()));
+    connect(&timer, SIGNAL(timeout()), this, SLOT(onUpdateTimerTimeout()), Qt::DirectConnection);
     ui->qouteTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->positionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->intraDayOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -51,7 +68,7 @@ void MainWindow::start() {
     ui->intraDayTransactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->histTransactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
-    timer.start(1000);
+    timer.start(3000);
 }
 
 void MainWindow::initDate() {
@@ -184,7 +201,7 @@ void MainWindow::onPlaceOrderButtonClicked() {
     qt.bid_price = cur_line.value(3)->text().toDouble();
     qt.bid_volume = cur_line.value(4)->text().toInt();
     orderPlaceDialog opd(rpc, &qt, false);
-    connect(&opd, SIGNAL(orderPlaced()), this, SLOT(updatePositionInfo()));
+    connect(&opd, SIGNAL(orderPlaced()), this, SLOT(onRefreshPositionButtonClicked()));
     opd.exec();
 }
 
@@ -197,7 +214,7 @@ void MainWindow::setPositionLine(QTableWidget *qtw, const PositionTypeTrans &pbt
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.frozen_amount)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.average_price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(rpc->get_pnl(pbt))));
-    qtw->setItem(row, column++, new QTableWidgetItem(pbt.long_short==LONG_ORDER?"Buy":"Sell"));
+    qtw->setItem(row, column++, new QTableWidgetItem(pbt.long_short==LONG_ORDER?"买":"卖"));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(rpc->get_close_price(pbt), 'f')));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.occupied_margin)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.underlying_price)));
@@ -210,8 +227,8 @@ void MainWindow::setOrderLine(QTableWidget *qtw, const OrderTypeTrans &ot, int r
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.instr_code)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(ot.amount)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short==LONG_ORDER?"Buy":"Sell")));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.open_offset==OPEN?"Open":"Offset")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.long_short==LONG_ORDER?"买":"卖")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.open_offset==OPEN?"开仓":"平仓")));
     //auto time = QDateTime::fromString(QString::fromStdString(ot.date_time), "yyyy-MM-dd HH:mm:ss");
     //time.setTimeZone(QTimeZone(8));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(ot.date_time)));
@@ -225,10 +242,11 @@ void MainWindow::setTransactionLine(QTableWidget *qtw, const TransactionTypeTran
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.instr_code)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.amount)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.long_short==LONG_ORDER?"Buy":"Sell")));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.open_offset==OPEN?"Open":"Offset")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.long_short==LONG_ORDER?"买":"卖")));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.open_offset==OPEN?"开仓":"平仓")));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::fromStdString(tt.date_time)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.underlying_price)));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::number(tt.close_pnl)));
 }
 
 void MainWindow::setQouteLine(QTableWidget *qtw, const QouteTrans &qt, int row) {
@@ -248,7 +266,7 @@ void MainWindow::onQouteCellDoubleClicked(int row, int col) {
     qt.bid_price = ui->qouteTableWidget->item(row, 3)->text().toDouble();
     qt.bid_volume = ui->qouteTableWidget->item(row, 4)->text().toInt();
     orderPlaceDialog opd(rpc, &qt, false);
-    connect(&opd, SIGNAL(orderPlaced()), this, SLOT(updatePositionInfo()));
+    connect(&opd, SIGNAL(orderPlaced()), this, SLOT(onRefreshPositionButtonClicked()));
     opd.exec();
 }
 
@@ -260,7 +278,7 @@ void MainWindow::onPositionCellDoubleClicked(int row, int col) {
     ptt.available_amount = ui->positionTableWidget->item(row, 2)->text().toInt();
     ptt.frozen_amount = ui->positionTableWidget->item(row, 3)->text().toDouble();
     ptt.average_price = ui->positionTableWidget->item(row, 4)->text().toDouble();
-    ptt.long_short = ui->positionTableWidget->item(row, 6)->text()=="Buy"?LONG_ORDER : SHORT_ORDER;
+    ptt.long_short = ui->positionTableWidget->item(row, 6)->text()=="买"?LONG_ORDER : SHORT_ORDER;
     ptt.offset_price = rpc->get_close_price(ptt);
     QouteTrans qt;
     qt.instr_code = ptt.instr_code;
@@ -271,8 +289,43 @@ void MainWindow::onPositionCellDoubleClicked(int row, int col) {
 
 
     orderPlaceDialog opd(rpc, &qt, true, ptt.long_short);
-    connect(&opd, SIGNAL(orderPlaced()), this, SLOT(updatePositionInfo()));
+    connect(&opd, SIGNAL(orderPlaced()), this, SLOT(onRefreshPositionButtonClicked()));
     opd.exec();
 }
 
+void MainWindow::onUpdateTimerTimeout() {
+    timed_future = QtConcurrent::run(this, &MainWindow::updateQouteAndBalance);
+}
 
+std::shared_ptr<ClientServiceClient> MainWindow::getThriftClient() {
+    boost::shared_ptr<TTransport> socket(new TSocket(SERVER_ADDR, 9090));
+    boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
+    boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
+    std::shared_ptr<ClientServiceClient> client = make_shared<ClientServiceClient>(protocol);
+
+    transport->open();
+    return client;
+}
+
+void MainWindow::updateQouteAndBalance() {
+    updateQoute();
+    updateBalance();
+}
+
+
+void MainWindow::onRefreshPositionButtonClicked() {
+    position_future = QtConcurrent::run(this, &MainWindow::updatePositionInfo);
+}
+
+void MainWindow::onRefreshIntraDayTransactionButtonClicked() {
+    intraday_transaction_future = QtConcurrent::run(this, &MainWindow::updateIntraDayTransactionInfo);
+}
+void MainWindow::onRefreshHistTransactionButtonClicked() {
+    hist_transaction_future = QtConcurrent::run(this, &MainWindow::updateHistTransactionInfo);
+}
+void MainWindow::onRefreshIntraDayOrderButtonClicked() {
+    intraday_order_future = QtConcurrent::run(this, &MainWindow::updateIntraDayOrderInfo);
+}
+void MainWindow::onRefreshHistOrderButtonClicked() {
+    hist_order_future = QtConcurrent::run(this, &MainWindow::updateHistOrderInfo);
+}
