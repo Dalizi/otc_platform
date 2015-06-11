@@ -35,6 +35,18 @@ FORMS    += mainwindow.ui \
     logindialog.ui \
     orderplacedialog.ui
 
-LIBS += -lhiredis
-LIBS += -lthrift
-LIBS += -lthriftnb
+INCLUDEPATH += C:\Users\mystconqueror\Downloads\boost_1_58_0\boost_1_58_0
+
+
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/x64/release/ -llibthrift
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/x64/debug/ -llibthrift
+
+INCLUDEPATH += $$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/src
+DEPENDPATH += $$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/x64/Debug
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/x64/release/ -llibthriftnb
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/x64/debug/ -llibthriftnb
+
+INCLUDEPATH += $$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/src
+DEPENDPATH += $$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/x64/Debug
