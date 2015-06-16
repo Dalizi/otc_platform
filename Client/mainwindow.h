@@ -49,9 +49,10 @@ private:
 #elif defined(Q_OS_WIN32)
     const std::vector<QString> order_status_lookup = std::vector<QString>({QString("已报"), QString("已成"), QString("废单"), QString("已撤")});
 #endif
-    std::shared_ptr<ClientServiceClient> timed_client;
     QFuture<void> timed_future, position_future, intraday_order_future, hist_order_future, intraday_transaction_future, hist_transaction_future;
+    std::shared_ptr<ClientServiceClient> timed_client;
     std::shared_ptr<ClientServiceClient> balance_client;
+    std::shared_ptr<ClientServiceClient> event_client;
 private:
     void setPositionLine(QTableWidget *qtw, const PositionTypeTrans &pbt, int row);
     void setOrderLine(QTableWidget *qtw, const OrderTypeTrans &ot, int row);
