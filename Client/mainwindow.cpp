@@ -1,3 +1,7 @@
+﻿#ifdef WIN32
+#pragma execution_character_set("utf-8")
+#endif
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -61,7 +65,8 @@ void MainWindow::start() {
     connect(ui->placeOrderPushButton, SIGNAL(clicked()), this, SLOT(onPlaceOrderButtonClicked()));
     connect(ui->qouteTableWidget, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(onQouteCellDoubleClicked(int,int)));
     connect(ui->positionTableWidget, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(onPositionCellDoubleClicked(int,int)));
-    connect(&timer, SIGNAL(timeout()), this, SLOT(onUpdateTimerTimeout()), Qt::DirectConnection);
+    connect(&timer, SIGNAL(timeout()), this, SLOT(onUpdateTimerTimeout()));
+    connect(this, SIGNAL(histTransactionReady()), this, SLOT(updateHistTransactionInfo()));
     ui->qouteTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->positionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->intraDayOrderTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -130,15 +135,22 @@ void MainWindow::updateIntraDayTransactionInfo(){
     }
 }
 
-void MainWindow::updateHistTransactionInfo() {
-    int row = 0;
+vector<TransactionTypeTrans> MainWindow::getHistTransactionInfo() {
     vector<TransactionTypeTrans> transaction_vec;
-    auto start_date = ui->histTransactionStartDateEdit->date().addDays(-10).toString("yyyy-MM-dd").toStdString();
+    auto start_date = ui->histTransactionStartDateEdit->date().toString("yyyy-MM-dd").toStdString();
     auto end_date = ui->histTransactionEndDateEdit->date().toString("yyyy-MM-dd").toStdString();
     event_client->get_transaction(transaction_vec, ClientId, start_date, end_date);
     ui->histTransactionTableWidget->setRowCount(transaction_vec.size());
-    for (auto o:transaction_vec) {
-        setTransactionLine(ui->histTransactionTableWidget, o, row++);
+    emit histTransactionReady();
+    return transaction_vec;
+}
+
+void MainWindow::updateHistTransactionInfo() {
+    int row = 0;
+    vector<TransactionTypeTrans> transaction_vec = hist_transaction_future.result();
+    ui->histTransactionTableWidget->setRowCount(transaction_vec.size());
+    for (auto transaction: transaction_vec) {
+        setTransactionLine(ui->histTransactionTableWidget, transaction, row++);
     }
 }
 
@@ -326,7 +338,7 @@ void MainWindow::onRefreshIntraDayTransactionButtonClicked() {
 void MainWindow::onRefreshHistTransactionButtonClicked() {
     if (hist_transaction_future.isRunning())
         return;
-    hist_transaction_future = QtConcurrent::run(this, &MainWindow::updateHistTransactionInfo);
+    hist_transaction_future = QtConcurrent::run(this, &MainWindow::getHistTransactionInfo);
 }
 void MainWindow::onRefreshIntraDayOrderButtonClicked() {
     if (intraday_order_future.isRunning())
