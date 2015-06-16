@@ -342,8 +342,16 @@ void PositionTypeTrans::__set_occupied_margin(const double val) {
   this->occupied_margin = val;
 }
 
-const char* PositionTypeTrans::ascii_fingerprint = "91F85633751CF664738C3203DB227A11";
-const uint8_t PositionTypeTrans::binary_fingerprint[16] = {0x91,0xF8,0x56,0x33,0x75,0x1C,0xF6,0x64,0x73,0x8C,0x32,0x03,0xDB,0x22,0x7A,0x11};
+void PositionTypeTrans::__set_close_price(const double val) {
+  this->close_price = val;
+}
+
+void PositionTypeTrans::__set_pnl(const double val) {
+  this->pnl = val;
+}
+
+const char* PositionTypeTrans::ascii_fingerprint = "6569E5EC79167A8F8FE9F4FD105F2005";
+const uint8_t PositionTypeTrans::binary_fingerprint[16] = {0x65,0x69,0xE5,0xEC,0x79,0x16,0x7A,0x8F,0x8F,0xE9,0xF4,0xFD,0x10,0x5F,0x20,0x05};
 
 uint32_t PositionTypeTrans::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -447,6 +455,22 @@ uint32_t PositionTypeTrans::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 11:
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble(this->close_price);
+          this->__isset.close_price = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 12:
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble(this->pnl);
+          this->__isset.pnl = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -504,6 +528,14 @@ uint32_t PositionTypeTrans::write(::apache::thrift::protocol::TProtocol* oprot) 
   xfer += oprot->writeDouble(this->occupied_margin);
   xfer += oprot->writeFieldEnd();
 
+  xfer += oprot->writeFieldBegin("close_price", ::apache::thrift::protocol::T_DOUBLE, 11);
+  xfer += oprot->writeDouble(this->close_price);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("pnl", ::apache::thrift::protocol::T_DOUBLE, 12);
+  xfer += oprot->writeDouble(this->pnl);
+  xfer += oprot->writeFieldEnd();
+
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   oprot->decrementRecursionDepth();
@@ -522,6 +554,8 @@ void swap(PositionTypeTrans &a, PositionTypeTrans &b) {
   swap(a.offset_price, b.offset_price);
   swap(a.underlying_price, b.underlying_price);
   swap(a.occupied_margin, b.occupied_margin);
+  swap(a.close_price, b.close_price);
+  swap(a.pnl, b.pnl);
   swap(a.__isset, b.__isset);
 }
 
@@ -536,6 +570,8 @@ PositionTypeTrans::PositionTypeTrans(const PositionTypeTrans& other3) {
   offset_price = other3.offset_price;
   underlying_price = other3.underlying_price;
   occupied_margin = other3.occupied_margin;
+  close_price = other3.close_price;
+  pnl = other3.pnl;
   __isset = other3.__isset;
 }
 PositionTypeTrans& PositionTypeTrans::operator=(const PositionTypeTrans& other4) {
@@ -549,6 +585,8 @@ PositionTypeTrans& PositionTypeTrans::operator=(const PositionTypeTrans& other4)
   offset_price = other4.offset_price;
   underlying_price = other4.underlying_price;
   occupied_margin = other4.occupied_margin;
+  close_price = other4.close_price;
+  pnl = other4.pnl;
   __isset = other4.__isset;
   return *this;
 }
@@ -565,6 +603,8 @@ std::ostream& operator<<(std::ostream& out, const PositionTypeTrans& obj) {
   out << ", " << "offset_price=" << to_string(obj.offset_price);
   out << ", " << "underlying_price=" << to_string(obj.underlying_price);
   out << ", " << "occupied_margin=" << to_string(obj.occupied_margin);
+  out << ", " << "close_price=" << to_string(obj.close_price);
+  out << ", " << "pnl=" << to_string(obj.pnl);
   out << ")";
   return out;
 }

@@ -2,6 +2,9 @@
 #include "ui_orderplacedialog.h"
 #include "ClientService.h"
 
+#include <QTime>
+#include <QDebug>
+
 extern int ClientId;
 
 orderPlaceDialog::orderPlaceDialog(ClientServiceClient *csc, QouteTrans *qt, bool is_close, LongShortType ls, QWidget *parent) :
@@ -58,7 +61,9 @@ void orderPlaceDialog::onAccepted() {
     ot.amount = ui->quantSpinBox->value();
     ot.open_offset = ui->openRadioButton->isChecked()?OPEN : OFFSET;
     ot.long_short = ui->longRadioButton->isChecked()?LONG_ORDER : SHORT_ORDER;
+    auto start_time = QTime::currentTime();
     rpc->place_order(ot);
+    qDebug() <<"Place order elapsed time:" <<QTime::currentTime().msecsSinceStartOfDay() - start_time.msecsSinceStartOfDay();
     emit orderPlaced();
 }
 

@@ -259,8 +259,8 @@ typedef struct _ClientService_get_pnl_args__isset {
 class ClientService_get_pnl_args {
  public:
 
-  static const char* ascii_fingerprint; // = "0E87A62696F21F1757D216119854DA66";
-  static const uint8_t binary_fingerprint[16]; // = {0x0E,0x87,0xA6,0x26,0x96,0xF2,0x1F,0x17,0x57,0xD2,0x16,0x11,0x98,0x54,0xDA,0x66};
+  static const char* ascii_fingerprint; // = "792567D5AE1B8543FE346DE85C79378C";
+  static const uint8_t binary_fingerprint[16]; // = {0x79,0x25,0x67,0xD5,0xAE,0x1B,0x85,0x43,0xFE,0x34,0x6D,0xE8,0x5C,0x79,0x37,0x8C};
 
   ClientService_get_pnl_args(const ClientService_get_pnl_args&);
   ClientService_get_pnl_args& operator=(const ClientService_get_pnl_args&);
@@ -297,8 +297,8 @@ class ClientService_get_pnl_args {
 class ClientService_get_pnl_pargs {
  public:
 
-  static const char* ascii_fingerprint; // = "0E87A62696F21F1757D216119854DA66";
-  static const uint8_t binary_fingerprint[16]; // = {0x0E,0x87,0xA6,0x26,0x96,0xF2,0x1F,0x17,0x57,0xD2,0x16,0x11,0x98,0x54,0xDA,0x66};
+  static const char* ascii_fingerprint; // = "792567D5AE1B8543FE346DE85C79378C";
+  static const uint8_t binary_fingerprint[16]; // = {0x79,0x25,0x67,0xD5,0xAE,0x1B,0x85,0x43,0xFE,0x34,0x6D,0xE8,0x5C,0x79,0x37,0x8C};
 
 
   virtual ~ClientService_get_pnl_pargs() throw();
@@ -392,8 +392,8 @@ typedef struct _ClientService_get_close_price_args__isset {
 class ClientService_get_close_price_args {
  public:
 
-  static const char* ascii_fingerprint; // = "0E87A62696F21F1757D216119854DA66";
-  static const uint8_t binary_fingerprint[16]; // = {0x0E,0x87,0xA6,0x26,0x96,0xF2,0x1F,0x17,0x57,0xD2,0x16,0x11,0x98,0x54,0xDA,0x66};
+  static const char* ascii_fingerprint; // = "792567D5AE1B8543FE346DE85C79378C";
+  static const uint8_t binary_fingerprint[16]; // = {0x79,0x25,0x67,0xD5,0xAE,0x1B,0x85,0x43,0xFE,0x34,0x6D,0xE8,0x5C,0x79,0x37,0x8C};
 
   ClientService_get_close_price_args(const ClientService_get_close_price_args&);
   ClientService_get_close_price_args& operator=(const ClientService_get_close_price_args&);
@@ -430,8 +430,8 @@ class ClientService_get_close_price_args {
 class ClientService_get_close_price_pargs {
  public:
 
-  static const char* ascii_fingerprint; // = "0E87A62696F21F1757D216119854DA66";
-  static const uint8_t binary_fingerprint[16]; // = {0x0E,0x87,0xA6,0x26,0x96,0xF2,0x1F,0x17,0x57,0xD2,0x16,0x11,0x98,0x54,0xDA,0x66};
+  static const char* ascii_fingerprint; // = "792567D5AE1B8543FE346DE85C79378C";
+  static const uint8_t binary_fingerprint[16]; // = {0x79,0x25,0x67,0xD5,0xAE,0x1B,0x85,0x43,0xFE,0x34,0x6D,0xE8,0x5C,0x79,0x37,0x8C};
 
 
   virtual ~ClientService_get_close_price_pargs() throw();
@@ -912,8 +912,8 @@ typedef struct _ClientService_update_hedge_position_args__isset {
 class ClientService_update_hedge_position_args {
  public:
 
-  static const char* ascii_fingerprint; // = "46B9A17A4F8DE224C5220D62878D2E48";
-  static const uint8_t binary_fingerprint[16]; // = {0x46,0xB9,0xA1,0x7A,0x4F,0x8D,0xE2,0x24,0xC5,0x22,0x0D,0x62,0x87,0x8D,0x2E,0x48};
+  static const char* ascii_fingerprint; // = "A7E35BAF7B829C22F147A1ADFAC957DB";
+  static const uint8_t binary_fingerprint[16]; // = {0xA7,0xE3,0x5B,0xAF,0x7B,0x82,0x9C,0x22,0xF1,0x47,0xA1,0xAD,0xFA,0xC9,0x57,0xDB};
 
   ClientService_update_hedge_position_args(const ClientService_update_hedge_position_args&);
   ClientService_update_hedge_position_args& operator=(const ClientService_update_hedge_position_args&);
@@ -950,8 +950,8 @@ class ClientService_update_hedge_position_args {
 class ClientService_update_hedge_position_pargs {
  public:
 
-  static const char* ascii_fingerprint; // = "46B9A17A4F8DE224C5220D62878D2E48";
-  static const uint8_t binary_fingerprint[16]; // = {0x46,0xB9,0xA1,0x7A,0x4F,0x8D,0xE2,0x24,0xC5,0x22,0x0D,0x62,0x87,0x8D,0x2E,0x48};
+  static const char* ascii_fingerprint; // = "A7E35BAF7B829C22F147A1ADFAC957DB";
+  static const uint8_t binary_fingerprint[16]; // = {0xA7,0xE3,0x5B,0xAF,0x7B,0x82,0x9C,0x22,0xF1,0x47,0xA1,0xAD,0xFA,0xC9,0x57,0xDB};
 
 
   virtual ~ClientService_update_hedge_position_pargs() throw();
@@ -1085,72 +1085,6 @@ class ClientService_place_order_pargs {
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 
   friend std::ostream& operator<<(std::ostream& out, const ClientService_place_order_pargs& obj);
-
-};
-
-typedef struct _ClientService_place_order_result__isset {
-  _ClientService_place_order_result__isset() : iq(false) {}
-  bool iq :1;
-} _ClientService_place_order_result__isset;
-
-class ClientService_place_order_result {
- public:
-
-  static const char* ascii_fingerprint; // = "0A23AF95FD017F7C6C78570E7E17112A";
-  static const uint8_t binary_fingerprint[16]; // = {0x0A,0x23,0xAF,0x95,0xFD,0x01,0x7F,0x7C,0x6C,0x78,0x57,0x0E,0x7E,0x17,0x11,0x2A};
-
-  ClientService_place_order_result(const ClientService_place_order_result&);
-  ClientService_place_order_result& operator=(const ClientService_place_order_result&);
-  ClientService_place_order_result() {
-  }
-
-  virtual ~ClientService_place_order_result() throw();
-  InvalidQuery iq;
-
-  _ClientService_place_order_result__isset __isset;
-
-  void __set_iq(const InvalidQuery& val);
-
-  bool operator == (const ClientService_place_order_result & rhs) const
-  {
-    if (!(iq == rhs.iq))
-      return false;
-    return true;
-  }
-  bool operator != (const ClientService_place_order_result &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const ClientService_place_order_result & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const ClientService_place_order_result& obj);
-
-};
-
-typedef struct _ClientService_place_order_presult__isset {
-  _ClientService_place_order_presult__isset() : iq(false) {}
-  bool iq :1;
-} _ClientService_place_order_presult__isset;
-
-class ClientService_place_order_presult {
- public:
-
-  static const char* ascii_fingerprint; // = "0A23AF95FD017F7C6C78570E7E17112A";
-  static const uint8_t binary_fingerprint[16]; // = {0x0A,0x23,0xAF,0x95,0xFD,0x01,0x7F,0x7C,0x6C,0x78,0x57,0x0E,0x7E,0x17,0x11,0x2A};
-
-
-  virtual ~ClientService_place_order_presult() throw();
-  InvalidQuery iq;
-
-  _ClientService_place_order_presult__isset __isset;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-  friend std::ostream& operator<<(std::ostream& out, const ClientService_place_order_presult& obj);
 
 };
 
@@ -1383,8 +1317,8 @@ typedef struct _ClientService_get_transaction_result__isset {
 class ClientService_get_transaction_result {
  public:
 
-  static const char* ascii_fingerprint; // = "5F1F8BB22F4BFEBDA382FE4C1F8DD834";
-  static const uint8_t binary_fingerprint[16]; // = {0x5F,0x1F,0x8B,0xB2,0x2F,0x4B,0xFE,0xBD,0xA3,0x82,0xFE,0x4C,0x1F,0x8D,0xD8,0x34};
+  static const char* ascii_fingerprint; // = "B5DD6D5C6AB7D1F75D5B1EDBB339B974";
+  static const uint8_t binary_fingerprint[16]; // = {0xB5,0xDD,0x6D,0x5C,0x6A,0xB7,0xD1,0xF7,0x5D,0x5B,0x1E,0xDB,0xB3,0x39,0xB9,0x74};
 
   ClientService_get_transaction_result(const ClientService_get_transaction_result&);
   ClientService_get_transaction_result& operator=(const ClientService_get_transaction_result&);
@@ -1431,8 +1365,8 @@ typedef struct _ClientService_get_transaction_presult__isset {
 class ClientService_get_transaction_presult {
  public:
 
-  static const char* ascii_fingerprint; // = "5F1F8BB22F4BFEBDA382FE4C1F8DD834";
-  static const uint8_t binary_fingerprint[16]; // = {0x5F,0x1F,0x8B,0xB2,0x2F,0x4B,0xFE,0xBD,0xA3,0x82,0xFE,0x4C,0x1F,0x8D,0xD8,0x34};
+  static const char* ascii_fingerprint; // = "B5DD6D5C6AB7D1F75D5B1EDBB339B974";
+  static const uint8_t binary_fingerprint[16]; // = {0xB5,0xDD,0x6D,0x5C,0x6A,0xB7,0xD1,0xF7,0x5D,0x5B,0x1E,0xDB,0xB3,0x39,0xB9,0x74};
 
 
   virtual ~ClientService_get_transaction_presult() throw();
@@ -1516,8 +1450,8 @@ typedef struct _ClientService_get_position_result__isset {
 class ClientService_get_position_result {
  public:
 
-  static const char* ascii_fingerprint; // = "E84D6F3181515B338475CE533A1B0C1B";
-  static const uint8_t binary_fingerprint[16]; // = {0xE8,0x4D,0x6F,0x31,0x81,0x51,0x5B,0x33,0x84,0x75,0xCE,0x53,0x3A,0x1B,0x0C,0x1B};
+  static const char* ascii_fingerprint; // = "ABCE8598F85A46102E7870951C3FEBA0";
+  static const uint8_t binary_fingerprint[16]; // = {0xAB,0xCE,0x85,0x98,0xF8,0x5A,0x46,0x10,0x2E,0x78,0x70,0x95,0x1C,0x3F,0xEB,0xA0};
 
   ClientService_get_position_result(const ClientService_get_position_result&);
   ClientService_get_position_result& operator=(const ClientService_get_position_result&);
@@ -1564,8 +1498,8 @@ typedef struct _ClientService_get_position_presult__isset {
 class ClientService_get_position_presult {
  public:
 
-  static const char* ascii_fingerprint; // = "E84D6F3181515B338475CE533A1B0C1B";
-  static const uint8_t binary_fingerprint[16]; // = {0xE8,0x4D,0x6F,0x31,0x81,0x51,0x5B,0x33,0x84,0x75,0xCE,0x53,0x3A,0x1B,0x0C,0x1B};
+  static const char* ascii_fingerprint; // = "ABCE8598F85A46102E7870951C3FEBA0";
+  static const uint8_t binary_fingerprint[16]; // = {0xAB,0xCE,0x85,0x98,0xF8,0x5A,0x46,0x10,0x2E,0x78,0x70,0x95,0x1C,0x3F,0xEB,0xA0};
 
 
   virtual ~ClientService_get_position_presult() throw();
@@ -2016,7 +1950,6 @@ class ClientServiceClient : virtual public ClientServiceIf {
   void recv_update_hedge_position();
   void place_order(const OrderTypeTrans& order);
   void send_place_order(const OrderTypeTrans& order);
-  void recv_place_order();
   void get_order(std::vector<OrderTypeTrans> & _return, const int32_t client_id, const std::string& start_date, const std::string& end_date);
   void send_get_order(const int32_t client_id, const std::string& start_date, const std::string& end_date);
   void recv_get_order(std::vector<OrderTypeTrans> & _return);
@@ -2277,7 +2210,7 @@ class ClientServiceCobSvIf {
   virtual void get_greeks(tcxx::function<void(GreekRisk const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */) = 0;
   virtual void get_client_greeks(tcxx::function<void(GreekRisk const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const int32_t client_id) = 0;
   virtual void update_hedge_position(tcxx::function<void()> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const std::vector<PositionTypeTrans> & ptt) = 0;
-  virtual void place_order(tcxx::function<void()> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const OrderTypeTrans& order) = 0;
+  virtual void place_order(tcxx::function<void()> cob, const OrderTypeTrans& order) = 0;
   virtual void get_order(tcxx::function<void(std::vector<OrderTypeTrans>  const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const int32_t client_id, const std::string& start_date, const std::string& end_date) = 0;
   virtual void get_transaction(tcxx::function<void(std::vector<TransactionTypeTrans>  const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const int32_t client_id, const std::string& start_date, const std::string& end_date) = 0;
   virtual void get_position(tcxx::function<void(std::vector<PositionTypeTrans>  const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const int32_t client_id) = 0;
@@ -2340,7 +2273,7 @@ class ClientServiceCobSvNull : virtual public ClientServiceCobSvIf {
   void update_hedge_position(tcxx::function<void()> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const std::vector<PositionTypeTrans> & /* ptt */) {
     return cob();
   }
-  void place_order(tcxx::function<void()> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const OrderTypeTrans& /* order */) {
+  void place_order(tcxx::function<void()> cob, const OrderTypeTrans& /* order */) {
     return cob();
   }
   void get_order(tcxx::function<void(std::vector<OrderTypeTrans>  const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const int32_t /* client_id */, const std::string& /* start_date */, const std::string& /* end_date */) {
@@ -2407,7 +2340,6 @@ class ClientServiceCobClient : virtual public ClientServiceCobClIf {
   void recv_update_hedge_position();
   void place_order(tcxx::function<void(ClientServiceCobClient* client)> cob, const OrderTypeTrans& order);
   void send_place_order(const OrderTypeTrans& order);
-  void recv_place_order();
   void get_order(tcxx::function<void(ClientServiceCobClient* client)> cob, const int32_t client_id, const std::string& start_date, const std::string& end_date);
   void send_get_order(const int32_t client_id, const std::string& start_date, const std::string& end_date);
   void recv_get_order(std::vector<OrderTypeTrans> & _return);

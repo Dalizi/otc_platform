@@ -32,7 +32,7 @@ MainWindow::MainWindow(ClientServiceClient *csc, QWidget *parent) :
     ui->setupUi(this);
     timed_client = getThriftClient();
     balance_client = getThriftClient();
-
+    event_client = getThriftClient();
 }
 
 MainWindow::~MainWindow()
@@ -52,6 +52,7 @@ void MainWindow::start() {
     updateClientInfo();
     updatePositionInfo();
     updateBalance();
+    updateQoute();
     connect(ui->intraDayOrderQueryPushButton, SIGNAL(clicked()), this, SLOT(onRefreshIntraDayOrderButtonClicked()));
     connect(ui->histOrderQueryPushButton, SIGNAL(clicked()), this, SLOT(onRefreshHistOrderButtonClicked()));
     connect(ui->intraDayTransactionQueryPushButton, SIGNAL(clicked()), this, SLOT(onRefreshIntraDayTransactionButtonClicked()));
@@ -68,16 +69,16 @@ void MainWindow::start() {
     ui->intraDayTransactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->histTransactionTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
-    timer.start(3000);
+    timer.start(2000);
 }
 
 void MainWindow::initDate() {
-    ui->histTransactionStartDateEdit->setDate(QDate::currentDate());
+    ui->histTransactionStartDateEdit->setDate(QDate::currentDate().addDays(-10));
     ui->histTransactionStartDateEdit->setMaximumDate(QDate::currentDate());
     ui->histTransactionEndDateEdit->setDate(QDate::currentDate());
     ui->histTransactionEndDateEdit->setMaximumDate(QDate::currentDate());
 
-    ui->histOrderStartDateEdit->setDate(QDate::currentDate());
+    ui->histOrderStartDateEdit->setDate(QDate::currentDate().addDays(-10));
     ui->histOrderStartDateEdit->setMaximumDate(QDate::currentDate());
     ui->histOrderEndDateEdit->setDate(QDate::currentDate());
     ui->histOrderEndDateEdit->setMaximumDate(QDate::currentDate());
@@ -85,7 +86,7 @@ void MainWindow::initDate() {
 
 void MainWindow::updateClientInfo() {
     ClientInfoTrans cit;
-    rpc->get_clientinfo(cit, ClientId);
+    event_client->get_clientinfo(cit, ClientId);
     stringstream ss;
     ss <<setfill('0') <<setw(8) <<cit.client_id;
     ui->clientIDLineEdit->setText(QString::fromStdString(ss.str()));
@@ -101,19 +102,19 @@ void MainWindow::updateClientInfo() {
 
 void MainWindow::updatePositionInfo() {
     int row =0;
+    qDebug() <<"Position thread is running? "<<position_future.isRunning();
     vector<PositionTypeTrans> pos_vec;
-    rpc->get_position(pos_vec, ClientId);
+    event_client->get_position(pos_vec, ClientId);
     ui->positionTableWidget->setRowCount(pos_vec.size());
     for (auto p:pos_vec) {
         setPositionLine(ui->positionTableWidget, p, row++);
     }
     GreekRisk greeks;
-    rpc->get_client_greeks(greeks, ClientId);
+    event_client->get_client_greeks(greeks, ClientId);
     ui->deltaLabel->setText(QString::number(greeks.delta));
     ui->gammaLabel->setText(QString::number(greeks.gamma));
     ui->thetaLabel->setText(QString::number(greeks.theta));
     ui->vegaLabel->setText(QString::number(greeks.vega));
-
 
 }
 
@@ -122,7 +123,7 @@ void MainWindow::updateIntraDayTransactionInfo(){
     vector<TransactionTypeTrans> transaction_vec;
     auto start_date = QDate::currentDate().toString("yyyy-MM-dd").toStdString();
     auto end_date = QDate::currentDate().toString("yyyy-MM-dd").toStdString();
-    rpc->get_transaction(transaction_vec, ClientId, start_date, end_date);
+    event_client->get_transaction(transaction_vec, ClientId, start_date, end_date);
     ui->intraDayTransactionTableWidget->setRowCount(transaction_vec.size());
     for (auto o:transaction_vec) {
         setTransactionLine(ui->intraDayTransactionTableWidget, o, row++);
@@ -134,7 +135,7 @@ void MainWindow::updateHistTransactionInfo() {
     vector<TransactionTypeTrans> transaction_vec;
     auto start_date = ui->histTransactionStartDateEdit->date().addDays(-10).toString("yyyy-MM-dd").toStdString();
     auto end_date = ui->histTransactionEndDateEdit->date().toString("yyyy-MM-dd").toStdString();
-    rpc->get_transaction(transaction_vec, ClientId, start_date, end_date);
+    event_client->get_transaction(transaction_vec, ClientId, start_date, end_date);
     ui->histTransactionTableWidget->setRowCount(transaction_vec.size());
     for (auto o:transaction_vec) {
         setTransactionLine(ui->histTransactionTableWidget, o, row++);
@@ -146,7 +147,7 @@ void MainWindow::updateIntraDayOrderInfo() {
     vector<OrderTypeTrans> order_vec;
     auto start_date = QDate::currentDate().toString("yyyy-MM-dd").toStdString();
     auto end_date = QDate::currentDate().toString("yyyy-MM-dd").toStdString();
-    rpc->get_order(order_vec, ClientId, start_date, end_date);
+    event_client->get_order(order_vec, ClientId, start_date, end_date);
     ui->intraDayOrderTableWidget->setRowCount(order_vec.size());
     for (auto o:order_vec) {
         setOrderLine(ui->intraDayOrderTableWidget, o, row++);
@@ -158,7 +159,7 @@ void MainWindow::updateHistOrderInfo() {
     vector<OrderTypeTrans> order_vec;
     auto start_date = ui->histOrderStartDateEdit->date().toString("yyyy-MM-dd").toStdString();
     auto end_date = ui->histOrderEndDateEdit->date().toString("yyyy-MM-dd").toStdString();
-    rpc->get_order(order_vec, ClientId, start_date, end_date);
+    event_client->get_order(order_vec, ClientId, start_date, end_date);
     ui->histOrderTableWidget->setRowCount(order_vec.size());
     for (auto o:order_vec) {
         setOrderLine(ui->histOrderTableWidget, o, row++);
@@ -169,7 +170,7 @@ void MainWindow::updateQoute() {
 
     int row = 0;
     vector<QouteTrans> qoute_vec;
-    rpc->get_qoute(qoute_vec);
+    timed_client->get_qoute(qoute_vec);
     ui->qouteTableWidget->setRowCount(qoute_vec.size());
     for (auto q:qoute_vec) {
         setQouteLine(ui->qouteTableWidget, q, row++);
@@ -179,16 +180,14 @@ void MainWindow::updateQoute() {
 void MainWindow::updateBalance() {
     map<string, double> balance_map;
     ClientBalanceTrans cbt;
-    rpc->get_calculated_balance(balance_map, ClientId);
-    rpc->get_balance(cbt, ClientId);
-    ui->marketValueBalanceLineEdit->setText(QString::number(balance_map["market_value_balance"], 'f'));
-    ui->totalBalanceLineEdit->setText(QString::number(cbt.total_balance, 'f'));
-    ui->occupiedMarginLineEdit->setText(QString::number(cbt.occupied_margin, 'f'));
-    ui->availableBalanceLineEdit->setText(QString::number(balance_map["available_balance"], 'f'));
-    ui->frozenBalanceLineEdit->setText(QString::number(balance_map["frozen_balance"], 'f'));
-    //ui->totalBalanceLineEdit->setText(QString::number(cbt.total_balance, 'f'));
-    ui->marginRiskLineEdit->setText(QString::number(balance_map["margin_risk_ratio"], 'f'));
-    //ui->marketValueLineEdit->setText(QString::number(balance_map["market_value"], 'f'));
+    balance_client->get_calculated_balance(balance_map, ClientId);
+    balance_client->get_balance(cbt, ClientId);
+    ui->marketValueBalanceLineEdit->setText(QString::number(balance_map["market_value_balance"], 'f', 2));
+    ui->totalBalanceLineEdit->setText(QString::number(cbt.total_balance, 'f', 2));
+    ui->occupiedMarginLineEdit->setText(QString::number(cbt.occupied_margin, 'f', 2));
+    ui->availableBalanceLineEdit->setText(QString::number(balance_map["available_balance"], 'f', 2));
+    ui->frozenBalanceLineEdit->setText(QString::number(balance_map["frozen_balance"], 'f', 2));
+    ui->marginRiskLineEdit->setText(QString::number(balance_map["margin_risk_ratio"], 'f', 2));
 
 }
 
@@ -213,9 +212,9 @@ void MainWindow::setPositionLine(QTableWidget *qtw, const PositionTypeTrans &pbt
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.available_amount)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.frozen_amount)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.average_price)));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::number(rpc->get_pnl(pbt))));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.pnl)));
     qtw->setItem(row, column++, new QTableWidgetItem(pbt.long_short==LONG_ORDER?"买":"卖"));
-    qtw->setItem(row, column++, new QTableWidgetItem(QString::number(rpc->get_close_price(pbt), 'f')));
+    qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.close_price)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.occupied_margin)));
     qtw->setItem(row, column++, new QTableWidgetItem(QString::number(pbt.underlying_price)));
 
@@ -314,18 +313,28 @@ void MainWindow::updateQouteAndBalance() {
 
 
 void MainWindow::onRefreshPositionButtonClicked() {
+    if (position_future.isRunning())
+        return;
     position_future = QtConcurrent::run(this, &MainWindow::updatePositionInfo);
 }
 
 void MainWindow::onRefreshIntraDayTransactionButtonClicked() {
+    if (intraday_transaction_future.isRunning())
+        return;
     intraday_transaction_future = QtConcurrent::run(this, &MainWindow::updateIntraDayTransactionInfo);
 }
 void MainWindow::onRefreshHistTransactionButtonClicked() {
+    if (hist_transaction_future.isRunning())
+        return;
     hist_transaction_future = QtConcurrent::run(this, &MainWindow::updateHistTransactionInfo);
 }
 void MainWindow::onRefreshIntraDayOrderButtonClicked() {
+    if (intraday_order_future.isRunning())
+        return;
     intraday_order_future = QtConcurrent::run(this, &MainWindow::updateIntraDayOrderInfo);
 }
 void MainWindow::onRefreshHistOrderButtonClicked() {
+    if (hist_order_future.isRunning())
+        return;
     hist_order_future = QtConcurrent::run(this, &MainWindow::updateHistOrderInfo);
 }
