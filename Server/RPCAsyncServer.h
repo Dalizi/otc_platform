@@ -63,10 +63,10 @@ class ClientServiceAsyncHandler : public ClientServiceCobSvIf {
     return cob();
   }
 
-  void place_order(tcxx::function<void()> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const OrderTypeTrans& order) {
-      syncHandler_->place_order(order);
-      return cob();
-    }
+  void place_order(tcxx::function<void()> cob, const OrderTypeTrans& order) {
+    syncHandler_->place_order(order);
+    return cob();
+  }
 
   void get_order(tcxx::function<void(std::vector<OrderTypeTrans>  const& _return)> cob, tcxx::function<void(::apache::thrift::TDelayedException* _throw)> /* exn_cob */, const int32_t client_id, const std::string& start_date, const std::string& end_date) {
     std::vector<OrderTypeTrans>  _return;

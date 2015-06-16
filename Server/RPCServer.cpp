@@ -96,6 +96,8 @@ void ClientServiceHandler::get_position(vector<PositionTypeTrans> & _return, con
 	for (auto pos : pos_vec) {
 		PositionTypeTrans ptt;
         ptt << pos;
+        ptt.pnl = tm->getPnL(pos, false);
+        ptt.close_price = tm->getClosePrice(pos);
 		_return.push_back(ptt);
 	}
 }

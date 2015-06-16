@@ -41,7 +41,9 @@ struct PositionTypeTrans {
 	7: LongShortType long_short,
 	8: double offset_price,
     9: double underlying_price,
-    10: double occupied_margin
+    10: double occupied_margin,
+    11: double close_price,
+    12: double pnl
 }
 
 struct OrderTypeTrans {
@@ -105,7 +107,7 @@ service ClientService {
 	GreekRisk get_greeks() throws (1:InvalidQuery iq),
 	GreekRisk get_client_greeks(1:i32 client_id) throws (1:InvalidQuery iq),
 	void update_hedge_position(1:list<PositionTypeTrans> ptt) throws (1:InvalidQuery iq),
-	void place_order(1: OrderTypeTrans order) throws (1:InvalidQuery iq),
+    oneway void place_order(1: OrderTypeTrans order),
 	list<OrderTypeTrans> get_order(1:i32 client_id, 2:string start_date, 3:string end_date) throws (1:InvalidQuery iq),
 	list<TransactionTypeTrans> get_transaction(1:i32 client_id, 2:string start_date, 3:string end_date) throws(1:InvalidQuery iq),
 	list<PositionTypeTrans> get_position(1:i32 client_id) throws (1:InvalidQuery iq),
