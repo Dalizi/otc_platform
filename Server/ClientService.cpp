@@ -1719,128 +1719,6 @@ uint32_t ClientService_place_order_pargs::write(::apache::thrift::protocol::TPro
 }
 
 
-ClientService_place_order_result::~ClientService_place_order_result() throw() {
-}
-
-
-uint32_t ClientService_place_order_result::read(::apache::thrift::protocol::TProtocol* iprot) {
-
-  uint32_t xfer = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TType ftype;
-  int16_t fid;
-
-  xfer += iprot->readStructBegin(fname);
-
-  using ::apache::thrift::protocol::TProtocolException;
-
-
-  while (true)
-  {
-    xfer += iprot->readFieldBegin(fname, ftype, fid);
-    if (ftype == ::apache::thrift::protocol::T_STOP) {
-      break;
-    }
-    switch (fid)
-    {
-      case 1:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->iq.read(iprot);
-          this->__isset.iq = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      default:
-        xfer += iprot->skip(ftype);
-        break;
-    }
-    xfer += iprot->readFieldEnd();
-  }
-
-  xfer += iprot->readStructEnd();
-
-  return xfer;
-}
-
-uint32_t ClientService_place_order_result::write(::apache::thrift::protocol::TProtocol* oprot) const {
-
-  uint32_t xfer = 0;
-
-  xfer += oprot->writeStructBegin("ClientService_place_order_result");
-
-  if (this->__isset.iq) {
-    xfer += oprot->writeFieldBegin("iq", ::apache::thrift::protocol::T_STRUCT, 1);
-    xfer += this->iq.write(oprot);
-    xfer += oprot->writeFieldEnd();
-  }
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  return xfer;
-}
-
-
-ClientService_place_order_presult::~ClientService_place_order_presult() throw() {
-}
-
-
-uint32_t ClientService_place_order_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
-
-  uint32_t xfer = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TType ftype;
-  int16_t fid;
-
-  xfer += iprot->readStructBegin(fname);
-
-  using ::apache::thrift::protocol::TProtocolException;
-
-
-  while (true)
-  {
-    xfer += iprot->readFieldBegin(fname, ftype, fid);
-    if (ftype == ::apache::thrift::protocol::T_STOP) {
-      break;
-    }
-    switch (fid)
-    {
-      case 1:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->iq.read(iprot);
-          this->__isset.iq = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      default:
-        xfer += iprot->skip(ftype);
-        break;
-    }
-    xfer += iprot->readFieldEnd();
-  }
-
-  xfer += iprot->readStructEnd();
-
-  return xfer;
-}
-
-uint32_t ClientService_place_order_presult::write(::apache::thrift::protocol::TProtocol* oprot) const {
-  uint32_t xfer = 0;
-  oprot->incrementRecursionDepth();
-  xfer += oprot->writeStructBegin("ClientService_place_order_presult");
-
-  if (this->__isset.iq) {
-    xfer += oprot->writeFieldBegin("iq", ::apache::thrift::protocol::T_STRUCT, 1);
-    xfer += this->iq.write(oprot);
-    xfer += oprot->writeFieldEnd();
-  }
-  xfer += oprot->writeFieldStop();
-  xfer += oprot->writeStructEnd();
-  oprot->decrementRecursionDepth();
-  return xfer;
-}
-
-
 ClientService_get_order_args::~ClientService_get_order_args() throw() {
 }
 
@@ -3824,13 +3702,12 @@ void ClientServiceClient::recv_update_hedge_position()
 void ClientServiceClient::place_order(const OrderTypeTrans& order)
 {
   send_place_order(order);
-  recv_place_order();
 }
 
 void ClientServiceClient::send_place_order(const OrderTypeTrans& order)
 {
   int32_t cseqid = 0;
-  oprot_->writeMessageBegin("place_order", ::apache::thrift::protocol::T_CALL, cseqid);
+  oprot_->writeMessageBegin("place_order", ::apache::thrift::protocol::T_ONEWAY, cseqid);
 
   ClientService_place_order_pargs args;
   args.order = &order;
@@ -3839,42 +3716,6 @@ void ClientServiceClient::send_place_order(const OrderTypeTrans& order)
   oprot_->writeMessageEnd();
   oprot_->getTransport()->writeEnd();
   oprot_->getTransport()->flush();
-}
-
-void ClientServiceClient::recv_place_order()
-{
-
-  int32_t rseqid = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TMessageType mtype;
-
-  iprot_->readMessageBegin(fname, mtype, rseqid);
-  if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
-    ::apache::thrift::TApplicationException x;
-    x.read(iprot_);
-    iprot_->readMessageEnd();
-    iprot_->getTransport()->readEnd();
-    throw x;
-  }
-  if (mtype != ::apache::thrift::protocol::T_REPLY) {
-    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
-    iprot_->readMessageEnd();
-    iprot_->getTransport()->readEnd();
-  }
-  if (fname.compare("place_order") != 0) {
-    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
-    iprot_->readMessageEnd();
-    iprot_->getTransport()->readEnd();
-  }
-  ClientService_place_order_presult result;
-  result.read(iprot_);
-  iprot_->readMessageEnd();
-  iprot_->getTransport()->readEnd();
-
-  if (result.__isset.iq) {
-    throw result.iq;
-  }
-  return;
 }
 
 void ClientServiceClient::get_order(std::vector<OrderTypeTrans> & _return, const int32_t client_id, const std::string& start_date, const std::string& end_date)
@@ -4663,7 +4504,7 @@ void ClientServiceProcessor::process_update_hedge_position(int32_t seqid, ::apac
   }
 }
 
-void ClientServiceProcessor::process_place_order(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext)
+void ClientServiceProcessor::process_place_order(int32_t, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol*, void* callContext)
 {
   void* ctx = NULL;
   if (this->eventHandler_.get() != NULL) {
@@ -4684,39 +4525,20 @@ void ClientServiceProcessor::process_place_order(int32_t seqid, ::apache::thrift
     this->eventHandler_->postRead(ctx, "ClientService.place_order", bytes);
   }
 
-  ClientService_place_order_result result;
   try {
     iface_->place_order(args.order);
-  } catch (InvalidQuery &iq) {
-    result.iq = iq;
-    result.__isset.iq = true;
-  } catch (const std::exception& e) {
+  } catch (const std::exception&) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "ClientService.place_order");
     }
-
-    ::apache::thrift::TApplicationException x(e.what());
-    oprot->writeMessageBegin("place_order", ::apache::thrift::protocol::T_EXCEPTION, seqid);
-    x.write(oprot);
-    oprot->writeMessageEnd();
-    oprot->getTransport()->writeEnd();
-    oprot->getTransport()->flush();
     return;
   }
 
   if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->preWrite(ctx, "ClientService.place_order");
+    this->eventHandler_->asyncComplete(ctx, "ClientService.place_order");
   }
 
-  oprot->writeMessageBegin("place_order", ::apache::thrift::protocol::T_REPLY, seqid);
-  result.write(oprot);
-  oprot->writeMessageEnd();
-  bytes = oprot->getTransport()->writeEnd();
-  oprot->getTransport()->flush();
-
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->postWrite(ctx, "ClientService.place_order", bytes);
-  }
+  return;
 }
 
 void ClientServiceProcessor::process_get_order(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext)
@@ -5630,13 +5452,13 @@ void ClientServiceCobClient::recv_update_hedge_position()
 void ClientServiceCobClient::place_order(tcxx::function<void(ClientServiceCobClient* client)> cob, const OrderTypeTrans& order)
 {
   send_place_order(order);
-  channel_->sendAndRecvMessage(tcxx::bind(cob, this), otrans_.get(), itrans_.get());
+  channel_->sendMessage(tcxx::bind(cob, this), otrans_.get());
 }
 
 void ClientServiceCobClient::send_place_order(const OrderTypeTrans& order)
 {
   int32_t cseqid = 0;
-  oprot_->writeMessageBegin("place_order", ::apache::thrift::protocol::T_CALL, cseqid);
+  oprot_->writeMessageBegin("place_order", ::apache::thrift::protocol::T_ONEWAY, cseqid);
 
   ClientService_place_order_pargs args;
   args.order = &order;
@@ -5645,60 +5467,6 @@ void ClientServiceCobClient::send_place_order(const OrderTypeTrans& order)
   oprot_->writeMessageEnd();
   oprot_->getTransport()->writeEnd();
   oprot_->getTransport()->flush();
-}
-
-void ClientServiceCobClient::recv_place_order()
-{
-
-  int32_t rseqid = 0;
-  std::string fname;
-  ::apache::thrift::protocol::TMessageType mtype;
-  bool completed = false;
-
-  try {
-    iprot_->readMessageBegin(fname, mtype, rseqid);
-    if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
-      ::apache::thrift::TApplicationException x;
-      x.read(iprot_);
-      iprot_->readMessageEnd();
-      iprot_->getTransport()->readEnd();
-      completed = true;
-      completed__(true);
-      throw x;
-    }
-    if (mtype != ::apache::thrift::protocol::T_REPLY) {
-      iprot_->skip(::apache::thrift::protocol::T_STRUCT);
-      iprot_->readMessageEnd();
-      iprot_->getTransport()->readEnd();
-      completed = true;
-      completed__(false);
-    }
-    if (fname.compare("place_order") != 0) {
-      iprot_->skip(::apache::thrift::protocol::T_STRUCT);
-      iprot_->readMessageEnd();
-      iprot_->getTransport()->readEnd();
-      completed = true;
-      completed__(false);
-    }
-    ClientService_place_order_presult result;
-    result.read(iprot_);
-    iprot_->readMessageEnd();
-    iprot_->getTransport()->readEnd();
-
-    if (result.__isset.iq) {
-      completed = true;
-      completed__(true);
-      throw result.iq;
-    }
-    completed = true;
-    completed__(true);
-    return;
-  } catch (...) {
-    if (!completed) {
-      completed__(false);
-    }
-    throw;
-  }
 }
 
 void ClientServiceCobClient::get_order(tcxx::function<void(ClientServiceCobClient* client)> cob, const int32_t client_id, const std::string& start_date, const std::string& end_date)
@@ -6965,6 +6733,8 @@ void ClientServiceAsyncProcessor::throw_update_hedge_position(tcxx::function<voi
 
 void ClientServiceAsyncProcessor::process_place_order(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot)
 {
+  (void) seqid;
+  (void) oprot;
   ClientService_place_order_args args;
   void* ctx = NULL;
   if (this->eventHandler_.get() != NULL) {
@@ -6989,84 +6759,13 @@ void ClientServiceAsyncProcessor::process_place_order(tcxx::function<void(bool o
     }
     return cob(false);
   }
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->asyncComplete(ctx, "ClientService.place_order");
+  }
   freer.unregister();
-  void (ClientServiceAsyncProcessor::*return_fn)(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx) =
-    &ClientServiceAsyncProcessor::return_place_order;
-  void (ClientServiceAsyncProcessor::*throw_fn)(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx, ::apache::thrift::TDelayedException* _throw) =
-    &ClientServiceAsyncProcessor::throw_place_order;
-  iface_->place_order(
-      tcxx::bind(return_fn, this, cob, seqid, oprot, ctx),
-      tcxx::bind(throw_fn, this, cob, seqid, oprot, ctx, tcxx::placeholders::_1),
+  iface_->place_order(tcxx::bind(cob, true)
+,
       args.order);
-}
-
-void ClientServiceAsyncProcessor::return_place_order(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx)
-{
-  ClientService_place_order_presult result;
-
-  if (this->eventHandler_.get() != NULL) {
-    ctx = this->eventHandler_->getContext("ClientService.place_order", NULL);
-  }
-  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "ClientService.place_order");
-
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->preWrite(ctx, "ClientService.place_order");
-  }
-
-  oprot->writeMessageBegin("place_order", ::apache::thrift::protocol::T_REPLY, seqid);
-  result.write(oprot);
-  oprot->writeMessageEnd();
-  uint32_t bytes = oprot->getTransport()->writeEnd();
-  oprot->getTransport()->flush();
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->postWrite(ctx, "ClientService.place_order", bytes);
-  }
-  return cob(true);
-}
-
-void ClientServiceAsyncProcessor::throw_place_order(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* oprot, void* ctx, ::apache::thrift::TDelayedException* _throw)
-{
-
-  if (this->eventHandler_.get() != NULL) {
-    ctx = this->eventHandler_->getContext("ClientService.place_order", NULL);
-  }
-  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "ClientService.place_order");
-
-  ClientService_place_order_result result;
-
-  try {
-    _throw->throw_it();
-    return cob(false);
-  }  catch (InvalidQuery &iq) {
-    result.iq = iq;
-    result.__isset.iq = true;
-  }
- catch (std::exception& e) {
-    if (this->eventHandler_.get() != NULL) {
-      this->eventHandler_->handlerError(ctx, "ClientService.place_order");
-    }
-
-    ::apache::thrift::TApplicationException x(e.what());
-    oprot->writeMessageBegin("place_order", ::apache::thrift::protocol::T_EXCEPTION, seqid);
-    x.write(oprot);
-    oprot->writeMessageEnd();
-    oprot->getTransport()->writeEnd();
-    oprot->getTransport()->flush();
-    return cob(true);
-  }
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->preWrite(ctx, "ClientService.place_order");
-  }
-
-  oprot->writeMessageBegin("place_order", ::apache::thrift::protocol::T_REPLY, seqid);
-  result.write(oprot);
-  oprot->writeMessageEnd();
-  uint32_t bytes = oprot->getTransport()->writeEnd();
-  oprot->getTransport()->flush();
-  if (this->eventHandler_.get() != NULL) {
-    this->eventHandler_->postWrite(ctx, "ClientService.place_order", bytes);
-  }
-  return cob(true);
 }
 
 void ClientServiceAsyncProcessor::process_get_order(tcxx::function<void(bool ok)> cob, int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot)
