@@ -51,6 +51,7 @@ MainWindow::MainWindow(TradeManager *tm, QWidget *parent) :
 	initMainAccountInfo();
     updateMainBalance();
     updateMainPnL();
+    initTestSqlTable();
 	
 
 }
@@ -63,6 +64,14 @@ MainWindow::~MainWindow()
 	delete opd;
 }
 
+#include <QSqlTableModel>
+void MainWindow::initTestSqlTable() {
+    QSqlTableModel *model = new QSqlTableModel(0, tm->db);
+    model->setTable("position");
+    model->setEditStrategy(QSqlTableModel::OnFieldChange);
+    model->select();
+    ui->sqlTableView->setModel(model);
+}
 
 
 void MainWindow::initClientInfo() {

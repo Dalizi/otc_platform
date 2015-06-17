@@ -69,6 +69,7 @@ private slots:
     void updateClientBalance();
     void updateMainBalance();
     void updateMainPnL();
+    void initTestSqlTable();
 
 signals:
     void currentClientID(int client_id);
