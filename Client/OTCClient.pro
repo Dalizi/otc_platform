@@ -37,7 +37,11 @@ FORMS    += mainwindow.ui \
 
 INCLUDEPATH += C:\Users\mystconqueror\Downloads\boost_1_58_0\boost_1_58_0
 
+unix: LIBS += -lthrift
 
+unix: LIBS += -lthriftnb
+
+unix: LIBS += -lhiredis
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/x64/release/ -llibthrift
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../Downloads/thrift-0.9.2/thrift-0.9.2/lib/cpp/x64/debug/ -llibthrift

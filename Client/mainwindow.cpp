@@ -305,6 +305,8 @@ void MainWindow::onPositionCellDoubleClicked(int row, int col) {
 }
 
 void MainWindow::onUpdateTimerTimeout() {
+    if (timed_future.isRunning())
+        return;
     timed_future = QtConcurrent::run(this, &MainWindow::updateQouteAndBalance);
 }
 
